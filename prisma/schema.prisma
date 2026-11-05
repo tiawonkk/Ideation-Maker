@@ -1,0 +1,275 @@
+// Prisma Schema for Hackathon Brief Generator AI (Ideation-Maker V1.0)
+// Supports PostgreSQL in production and SQLite in local development.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// 1. Users
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  name          String
+  passwordHash  String
+  role          String    @default("HACKATHON_PARTICIPANT")
+  preferredLang String    @default("en") // "en" | "id"
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  projects      Project[]
+}
+
+// 2. Projects
+model Project {
+  id                     String                  @id @default(cuid())
+  userId                 String
+  user                   User                    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title                  String
+  tagline                String?
+  teamName               String?
+  preparedBy             String?
+  status                 String                  @default("IN_PROGRESS") // DRAFT | IN_PROGRESS | VALIDATED | READY_FOR_PITCH
+  currentStep            Int                     @default(1)
+  completionPercentage   Int                     @default(0)
+  lastEditedAt           DateTime                @default(now())
+  createdAt              DateTime                @default(now())
+  updatedAt              DateTime                @updatedAt
+
+  competition            Competition?
+  judgeCriteria          JudgeCriterion[]
+  problemStatement       ProblemStatement?
+  researchEvidence       ResearchEvidence[]
+  solutionAlternatives   SolutionAlternative[]
+  productFeatures        ProductFeature[]
+  technicalArchitecture  TechnicalArchitecture?
+  developmentMilestones  DevelopmentMilestone[]
+  deliverables           Deliverable[]
+  judgeScores            JudgeScore[]
+  generatedBrief         GeneratedBrief?
+  aiGenerationHistory    AIGenerationHistory[]
+
+  @@index([userId])
+}
+
+// 3. Competitions (Step 1)
+model Competition {
+  id                String   @id @default(cuid())
+  projectId         String   @unique
+  project           Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  name              String
+  theme             String
+  description       String
+  domain            String
+  targetTechnology  String
+  additionalContext String?
+  aiAnalysisJson    String?  // Theme Breakdown, Relevant Industries, Main Challenges, Tech Opportunities, Problem Areas, Judge Focus, Innovation Directions
+  updatedAt         DateTime @updatedAt
+}
+
+// 4. Judge Criteria (Step 2)
+model JudgeCriterion {
+  id               String   @id @default(cuid())
+  projectId        String
+  project          Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  name             String
+  weight           Float    // Percentage weight (must sum to 100%)
+  description      String?
+  whatJudgesLookFor String?
+  strategicRec     String?
+  priorityRank     Int      @default(1)
+  mappedCapability String?
+  createdAt        DateTime @default(now())
+
+  @@index([projectId])
+}
+
+// 5. Problem Statements (Step 3)
+model ProblemStatement {
+  id                    String   @id @default(cuid())
+  projectId             String   @unique
+  project               Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  whoExperiences        String
+  biggestDifficulty     String
+  frequency             String
+  impactDescription     String
+  currentWorkarounds    String
+  whyInsufficient       String
+  targetUser            String?
+  personaJson           String?
+  painPointsJson        String?
+  currentAlternativesJson String?
+  problemSeverity       String?
+  problemFrequency      String?
+  structuredStatement   String?  // "[Target user] experiences [specific problem] because [root cause], resulting in [measurable impact]."
+  rootCauseAnalysisJson String?
+  updatedAt             DateTime @updatedAt
+}
+
+// 6. Research Evidence (Step 4)
+model ResearchEvidence {
+  id               String   @id @default(cuid())
+  projectId        String
+  project          Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  finding          String
+  supportingStat   String
+  sourceTitle      String
+  sourceOrg        String
+  publicationDate  String
+  sourceUrl        String
+  evidenceType     String   // Academic Paper | Government Statistics | Industry Report | Official Dataset | Reputable News
+  relevance        String
+  opportunity      String
+  strength         String   // Strong Evidence | Moderate Evidence | Limited Evidence
+  isVerified       Boolean  @default(true)
+  createdAt        DateTime @default(now())
+
+  @@index([projectId])
+}
+
+// 7. Solution Alternatives (Step 5)
+model SolutionAlternative {
+  id                       String   @id @default(cuid())
+  projectId                String
+  project                  Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  name                     String
+  conceptDescription       String
+  targetUser               String
+  coreFunctionality        String
+  innovation               String
+  expectedImpact           String
+  technicalComplexity      String   // Low | Medium | High
+  feasibility              String
+  competitiveDiff          String
+  judgeAlignment           String
+  isRecommended            Boolean  @default(false)
+  recommendationReasoning  String?
+  isSelected               Boolean  @default(false)
+  customNotes              String?
+  createdAt                DateTime @default(now())
+
+  @@index([projectId])
+}
+
+// 8. Product Features & Product Design (Step 6)
+model ProductFeature {
+  id                String   @id @default(cuid())
+  projectId         String
+  project           Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  name              String
+  description       String
+  category          String   // MVP | CORE | FUTURE
+  moscowPriority    String   // MUST_HAVE | SHOULD_HAVE | COULD_HAVE | WONT_HAVE_YET
+  productDesignJson String?  // Stores Identity, Value Prop, UX Persona, Journey, Screens, Mermaid Flowchart
+  createdAt         DateTime @default(now())
+
+  @@index([projectId])
+}
+
+// 9. Technical Architectures (Step 7)
+model TechnicalArchitecture {
+  id                           String   @id @default(cuid())
+  projectId                    String   @unique
+  project                      Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  frontend                     String
+  backend                      String
+  database                     String
+  cloudInfrastructure          String
+  authentication               String
+  storage                      String
+  analytics                    String
+  thirdPartyApis               String
+  aiIntegration                String
+  systemOverview               String
+  architectureExplanation      String
+  componentResponsibilitiesJson String
+  databaseDesign               String
+  apiIntegrationPlan           String
+  aiIntegrationStrategy        String
+  securityConsiderations       String
+  deploymentStrategy           String
+  technicalRisksJson           String
+  mermaidDiagram               String
+  updatedAt                    DateTime @updatedAt
+}
+
+// 10. Development Milestones (Step 8)
+model DevelopmentMilestone {
+  id                  String   @id @default(cuid())
+  projectId           String
+  project             Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  orderIndex          Int
+  periodLabel         String   // e.g., "Hours 1-6", "Day 1", "Week 1"
+  activity            String
+  objective           String
+  tasksJson           String
+  responsibleRole     String
+  expectedOutput      String
+  dependencies        String
+  completionCriteria  String
+  isCompleted         Boolean  @default(false)
+  updatedAt           DateTime @updatedAt
+
+  @@index([projectId])
+}
+
+// 11. Deliverables (Step 9)
+model Deliverable {
+  id               String   @id @default(cuid())
+  projectId        String
+  project          Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  title            String
+  type             String   // MANDATORY | RECOMMENDED | CUSTOM
+  responsibleRole  String
+  deadline         String
+  completed        Boolean  @default(false)
+  notes            String?
+  createdAt        DateTime @default(now())
+
+  @@index([projectId])
+}
+
+// 12. Judge Scores (Sticky Judge Score Engine)
+model JudgeScore {
+  id                         String   @id @default(cuid())
+  projectId                  String
+  project                    Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  overallScore               Float
+  categoryBreakdownJson      String   // Array of { category, weight, rawScore, weightedScore, reasoning }
+  weakestCategory            String
+  improvementSuggestionsJson String
+  confidenceWarning          String?
+  createdAt                  DateTime @default(now())
+
+  @@index([projectId])
+}
+
+// 13. Generated Briefs (Step 10)
+model GeneratedBrief {
+  id                    String   @id @default(cuid())
+  projectId             String   @unique
+  project               Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  coverJson             String
+  sectionsJson          String   // Sections 1 to 13 + Appendix
+  missingWarningsJson   String
+  version               Int      @default(1)
+  updatedAt             DateTime @updatedAt
+}
+
+// 14. AI Generation History
+model AIGenerationHistory {
+  id             String   @id @default(cuid())
+  projectId      String
+  project        Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  stepNumber     Int
+  moduleName     String
+  providerMode   String   // "GEMINI_LIVE" | "OPENAI_LIVE" | "STRATEGIST_DEV_ENGINE"
+  promptSummary  String
+  outputJson     String
+  createdAt      DateTime @default(now())
+
+  @@index([projectId])
+}

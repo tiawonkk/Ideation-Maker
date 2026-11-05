@@ -1,0 +1,1203 @@
+import fs from "fs";
+import path from "path";
+import {
+  DeliverableItem,
+  Project,
+  User,
+} from "@/types/project";
+import {
+  calculateCompletionPercentage,
+  calculateJudgeScore,
+  DEFAULT_JUDGE_CRITERIA,
+} from "@/lib/scoring/judge-engine";
+
+const DATA_DIR = path.join(process.cwd(), "data");
+const DB_FILE = path.join(DATA_DIR, "ideation-maker-db.json");
+
+export interface DatabaseSchema {
+  users: User[];
+  projects: Project[];
+}
+
+export const DEFAULT_DELIVERABLES: DeliverableItem[] = [
+  // Mandatory Deliverables
+  {
+    id: "deliv-1",
+    title: "Pitch Deck (Problem, Validation, Demo, Architecture, Roadmap)",
+    category: "MANDATORY",
+    responsibleRole: "Product Manager / Hustler",
+    deadline: "H-12 Hours before submission",
+    completed: false,
+  },
+  {
+    id: "deliv-2",
+    title: "Working Demo (Deployed Live URL & Fallback Local Build)",
+    category: "MANDATORY",
+    responsibleRole: "Full-Stack / Frontend Lead",
+    deadline: "H-6 Hours before submission",
+    completed: false,
+  },
+  {
+    id: "deliv-3",
+    title: "Source Code (Clean, Modular, Documented)",
+    category: "MANDATORY",
+    responsibleRole: "Engineering Team",
+    deadline: "H-4 Hours before submission",
+    completed: false,
+  },
+  {
+    id: "deliv-4",
+    title: "GitHub Repository (Public/Judge Access + Setup README)",
+    category: "MANDATORY",
+    responsibleRole: "Software Architect",
+    deadline: "H-4 Hours before submission",
+    completed: false,
+  },
+  {
+    id: "deliv-5",
+    title: "System Architecture Diagram (Mermaid / High-Res Export)",
+    category: "MANDATORY",
+    responsibleRole: "Software Architect",
+    deadline: "H-18 Hours before submission",
+    completed: false,
+  },
+  {
+    id: "deliv-6",
+    title: "Problem Validation Report (With Verifiable Citations)",
+    category: "MANDATORY",
+    responsibleRole: "Product Manager / Researcher",
+    deadline: "Day 1 Milestone",
+    completed: false,
+  },
+  // Recommended Deliverables
+  {
+    id: "deliv-7",
+    title: "Business Model Canvas / Sustainability Plan",
+    category: "RECOMMENDED",
+    responsibleRole: "Business Analyst",
+    deadline: "H-24 Hours before submission",
+    completed: false,
+  },
+  {
+    id: "deliv-8",
+    title: "Product Roadmap (MVP vs Post-Hackathon Scale)",
+    category: "RECOMMENDED",
+    responsibleRole: "Product Manager",
+    deadline: "H-16 Hours before submission",
+    completed: false,
+  },
+  {
+    id: "deliv-9",
+    title: "3-Minute Demo Video (Narrated Walkthrough)",
+    category: "RECOMMENDED",
+    responsibleRole: "Product Manager / Designer",
+    deadline: "H-3 Hours before submission",
+    completed: false,
+  },
+  {
+    id: "deliv-10",
+    title: "User Journey & Flow Diagram",
+    category: "RECOMMENDED",
+    responsibleRole: "UI/UX Designer",
+    deadline: "Day 1 Milestone",
+    completed: false,
+  },
+  {
+    id: "deliv-11",
+    title: "Interactive Wireframes / High-Fidelity UI",
+    category: "RECOMMENDED",
+    responsibleRole: "UI/UX Designer",
+    deadline: "Day 1 Milestone",
+    completed: false,
+  },
+  {
+    id: "deliv-12",
+    title: "Technical & API Documentation",
+    category: "RECOMMENDED",
+    responsibleRole: "Backend / AI Engineer",
+    deadline: "H-6 Hours before submission",
+    completed: false,
+  },
+  {
+    id: "deliv-13",
+    title: "Testing & QA Verification Log",
+    category: "RECOMMENDED",
+    responsibleRole: "QA / Full-Stack Engineer",
+    deadline: "H-4 Hours before submission",
+    completed: false,
+  },
+];
+
+function createSeedProject(ownerId: string): Project {
+  const baseProject: Project = {
+    id: "proj-sample-medtriage",
+    userId: ownerId,
+    title: "MedTriage Rural AI — Multimodal Clinical Triage Copilot",
+    tagline: "Reducing rural primary-care diagnostic delays with offline-capable multimodal AI triage.",
+    teamName: "Garuda Nusantara AI",
+    preparedBy: "Christian Immanuel Valerio",
+    status: "READY_FOR_PITCH",
+    currentStep: 10,
+    completionPercentage: 100,
+    lastEditedAt: new Date().toISOString(),
+    createdAt: new Date(Date.now() - 86400000 * 2).toISOString(),
+    step1_competition: {
+      name: "Gemini API Developer Competition",
+      theme: "AI for Social Impact & Accessible Healthcare",
+      description:
+        "Build high-impact applications using multimodal generative AI to solve urgent community challenges in healthcare, education, or sustainability.",
+      domain: "Healthcare & Public Health Informatics",
+      targetTechnology: "Google Gemini Multimodal API, Next.js, Edge Offline Cache, PostgreSQL",
+      additionalContext:
+        "Focus on underserved rural clinics (Puskesmas) in Indonesia where specialist physicians are scarce.",
+      analysis: {
+        themeBreakdown:
+          "The theme demands more than a generic medical Q&A wrapper. Judges prioritize measurable patient/clinician workflow improvements, safe clinical decision support (non-diagnostic triage escalation), and resilient operation in low-resource settings.",
+        relevantIndustries: [
+          {
+            name: "Rural Primary Healthcare (Puskesmas)",
+            relevanceWhy:
+              "Frontline triage nurses handle high patient volumes with limited specialist consultation access.",
+          },
+          {
+            name: "Telemedicine & Referral Triage",
+            relevanceWhy:
+              "Structured pre-referral summaries drastically cut emergency hospital intake delays.",
+          },
+        ],
+        mainChallenges: [
+          "Hallucination risk in clinical settings requiring strict protocol grounding.",
+          "Intermittent internet connectivity in remote archipelago clinics.",
+          "High cognitive load for frontline nurses documenting patient intake.",
+        ],
+        technologyOpportunities: [
+          {
+            tech: "Gemini Multimodal (Audio + Image + Text)",
+            opportunityWhy:
+              "Simultaneously processes nurse voice notes, vital sign chart photos, and WHO/MoH clinical guidelines.",
+          },
+          {
+            tech: "Retrieval-Augmented Protocol Grounding",
+            opportunityWhy:
+              "Pins every triage recommendation to official Ministry of Health (Kemenkes) standard operating procedures.",
+          },
+        ],
+        potentialProblemAreas: [
+          {
+            area: "Delayed Emergency Referral Triage",
+            relevanceWhy: "Late identification of high-risk maternal and infectious cases causes preventable mortality.",
+          },
+          {
+            area: "Manual Referral Documentation Bottlenecks",
+            relevanceWhy: "Nurses spend 15–25 minutes per complex case writing referral letters manually.",
+          },
+        ],
+        judgeFocusAreas: [
+          "Depth and necessity of Gemini multimodal capabilities (voice + image + long-context protocols).",
+          "Empirical validation of the healthcare bottleneck with verifiable public health statistics.",
+          "Safety guardrails: human-in-the-loop verification and citation transparency.",
+        ],
+        recommendedInnovationDirections: [
+          {
+            title: "Protocol-Grounded Multimodal Triage Copilot",
+            description:
+              "Combine voice intake, photo capture of paper vitals, and official clinical guidelines into a 60-second red-flag triage scorer.",
+            whyRelevant:
+              "Directly showcases multimodal AI strength while solving a documented clinical bottleneck.",
+          },
+          {
+            title: "Automated SBAR Referral Packet Generator",
+            description:
+              "Instantly structure patient findings into standardized Situation-Background-Assessment-Recommendation (SBAR) hospital handoffs.",
+            whyRelevant:
+              "Produces immediate, measurable time savings that can be demonstrated live to judges in under 2 minutes.",
+          },
+        ],
+      },
+    },
+    step2_judgeCriteria: {
+      criteria: [
+        {
+          id: "c1",
+          name: "Innovation",
+          weight: 30,
+          description: "Creative & essential use of multimodal AI beyond standard text chat.",
+          interpretation: "Must prove why multimodal input (voice + image + protocol PDF) is indispensable.",
+          whatJudgesLookFor: "Zero-friction nurse UX and citation-backed clinical protocol matching.",
+          strategicRecommendation: "Highlight live multimodal intake (voice + vital chart photo) in the first 45 seconds of the demo.",
+          priorityRank: 1,
+          mappedCapability: "Multimodal Voice + Chart Photo Intake + Grounded Protocol Engine",
+        },
+        {
+          id: "c2",
+          name: "Impact",
+          weight: 30,
+          description: "Real-world measurable benefit and strong problem validation.",
+          interpretation: "Requires authoritative WHO/Ministry of Health data proving triage bottlenecks.",
+          whatJudgesLookFor: "Quantified time saved per patient and reduction in missed high-risk referrals.",
+          strategicRecommendation: "Anchor the pitch in verified WHO & PubMed clinical triage studies.",
+          priorityRank: 2,
+          mappedCapability: "60-Second Red-Flag Detection & SBAR Referral Automation",
+        },
+        {
+          id: "c3",
+          name: "Feasibility",
+          weight: 15,
+          description: "Realistic MVP scope, safety guardrails, and field readiness.",
+          interpretation: "Must include clinician-in-the-loop sign-off rather than autonomous diagnosis.",
+          whatJudgesLookFor: "Clear regulatory boundary (decision support vs autonomous diagnosis).",
+          strategicRecommendation: "Include mandatory nurse confirmation checkboxes and offline queue sync.",
+          priorityRank: 3,
+          mappedCapability: "Human-in-the-Loop Verification & Offline Queue Sync",
+        },
+        {
+          id: "c4",
+          name: "Technical Excellence",
+          weight: 15,
+          description: "Clean architecture, structured JSON outputs, and low latency.",
+          interpretation: "End-to-end typed schema enforcement and resilient error handling.",
+          whatJudgesLookFor: "Deterministic JSON schema outputs and sub-3-second response streaming.",
+          strategicRecommendation: "Showcase structured JSON triage output and architectural diagram.",
+          priorityRank: 4,
+          mappedCapability: "Typed Multimodal Pipeline + Indexed Guideline Store",
+        },
+        {
+          id: "c5",
+          name: "Presentation",
+          weight: 10,
+          description: "Compelling storytelling, clear live demo, and complete documentation.",
+          interpretation: "Judges evaluate clarity of the problem-to-demo arc within a 3-minute pitch.",
+          whatJudgesLookFor: "Polished live workflow and verifiable evidence appendix.",
+          strategicRecommendation: "Use a real clinical scenario walkthrough during the pitch.",
+          priorityRank: 5,
+          mappedCapability: "End-to-End Live Triage Walkthrough & A4 Project Brief",
+        },
+      ],
+      overallInterpretation:
+        "With 60% of the score concentrated in Innovation (30%) and Impact (30%), the winning strategy must combine verifiable public-health evidence with a visibly multimodal live product demo.",
+      strategicPriorities: [
+        "Lead with verified clinical triage delay evidence (Impact: 30%).",
+        "Demonstrate simultaneous voice + clinical chart image analysis (Innovation: 30%).",
+        "Enforce human-in-the-loop nurse sign-off and protocol citations (Feasibility & Technical: 30%).",
+      ],
+    },
+    step3_problemDiscovery: {
+      whoExperiences:
+        "Frontline triage nurses and general practitioners at rural primary healthcare clinics (Puskesmas) in underserved regions.",
+      biggestDifficulty:
+        "Rapidly cross-referencing complex symptoms, vital signs, and national clinical guidelines during peak clinic hours while manually writing hospital referral summaries.",
+      frequency: "Daily — occurring across 30 to 60 patient intakes per clinic every morning.",
+      impact:
+        "15–25 minutes spent per complex referral case on manual documentation, contributing to delayed emergency escalations and clinician burnout.",
+      currentWorkarounds:
+        "Static PDF guideline booklets, WhatsApp messages to on-call doctors, and handwritten paper referral forms.",
+      whyInsufficient:
+        "Static PDFs take too long to search during urgent intake, and unstructured WhatsApp messages omit critical clinical red flags.",
+      analysis: {
+        targetUser: "Frontline Triage Nurses & Rural Primary Care Clinicians (Puskesmas)",
+        userPersona: {
+          name: "Ners Rina Wulandari, S.Kep",
+          role: "Senior Triage Nurse at a Rural Community Health Center",
+          demographics: "29 years old, handles 45+ patients/day with 1 general practitioner on duty",
+          goals: [
+            "Identify high-risk emergency cases within 2 minutes of arrival",
+            "Generate accurate SBAR hospital referral letters without delaying the queue",
+          ],
+          frustrations: [
+            "Searching 200-page PDF clinical guidelines mid-consultation is impractical",
+            "Re-typing handwritten vital signs into referral forms wastes critical time",
+          ],
+          quote:
+            "When ten patients arrive at once, I need immediate protocol verification and a ready-to-send referral summary—not another complex form.",
+        },
+        painPoints: [
+          "High cognitive load matching multi-symptom presentations against national clinical guidelines.",
+          "Time-consuming manual transcription of paper vital logs into digital referral letters.",
+          "Inconsistent handoff quality when referring high-risk patients to regional hospitals.",
+        ],
+        currentAlternatives: [
+          {
+            name: "Printed / PDF Clinical SOP Manuals",
+            limitation: "Passive reference; cannot actively flag risk combinations from patient vitals.",
+          },
+          {
+            name: "Unstructured WhatsApp Consultations",
+            limitation: "Lacks standardized SBAR structure, audit trail, and clinical guideline citations.",
+          },
+        ],
+        problemSeverity: "Critical",
+        problemFrequency: "Daily (30–60 patient encounters per clinic per day)",
+        problemStatement:
+          "Frontline triage nurses at rural primary care clinics experience delays and documentation overload when assessing complex patient presentations because clinical guidelines are trapped in static manuals and referral summaries are drafted manually, resulting in 15–25 minute administrative bottlenecks per referral and delayed escalation of high-risk cases.",
+        rootCauseAnalysis: [
+          "Disconnect between point-of-care patient intake (voice + paper vitals) and static clinical guideline documents.",
+          "Lack of automated SBAR clinical summarization tailored to primary-to-secondary care referrals.",
+          "Shortage of specialist physicians at frontline clinics to provide immediate second opinions.",
+        ],
+        validationDisclaimer:
+          "Note: This problem statement is structured from user workflow analysis and desk research. Direct field usability testing with clinic nurses is scheduled as part of the validation roadmap.",
+      },
+    },
+    step4_evidenceValidation: {
+      searchQuery: "clinical decision support triage primary care rural healthcare referral delay",
+      evidenceItems: [
+        {
+          id: "ev-1",
+          finding:
+            "World Health Organization (WHO) reports that primary health care workforce shortages and administrative burden significantly impact timely care delivery in low- and middle-income regions.",
+          supportingStatistic:
+            "Global shortfall of 10 million health workers projected by 2030, disproportionately affecting rural primary care facilities.",
+          sourceTitle: "Health workforce overview and primary care capacity",
+          sourceOrganization: "World Health Organization (WHO)",
+          publicationDate: "2023",
+          originalSourceUrl: "https://www.who.int/health-topics/health-workforce",
+          evidenceType: "Government Statistics",
+          relevanceToProblem:
+            "Validates the structural clinician shortage in rural clinics that forces triage nurses to manage high patient volumes.",
+          businessOrSocialOpportunity:
+            "Decision-support tools that save 10+ minutes per complex intake multiply effective clinician capacity.",
+          evidenceStrength: "Strong Evidence",
+          isVerifiedExternal: true,
+          verificationNote: "Official WHO public health authority resource.",
+        },
+        {
+          id: "ev-2",
+          finding:
+            "Clinical Decision Support Systems (CDSS) integrated into primary care triage improve adherence to clinical guidelines and reduce diagnostic escalation delays.",
+          supportingStatistic:
+            "Systematic reviews in NPJ Digital Medicine and BMJ show structured CDSS improves guideline adherence by 12%–28% in primary care triage.",
+          sourceTitle: "Computerised clinical decision support systems for primary care (Crossref / BMJ)",
+          sourceOrganization: "BMJ / Crossref Academic Index",
+          publicationDate: "2022",
+          originalSourceUrl: "https://doi.org/10.1136/bmj-2021-066881",
+          evidenceType: "Academic Paper",
+          relevanceToProblem:
+            "Demonstrates peer-reviewed empirical evidence that protocol-grounded triage software measurably improves frontline care.",
+          businessOrSocialOpportunity:
+            "High institutional adoption potential across public health networks seeking standardized referral quality.",
+          evidenceStrength: "Strong Evidence",
+          isVerifiedExternal: true,
+          verificationNote: "Verified DOI via Crossref academic registry.",
+        },
+        {
+          id: "ev-3",
+          finding:
+            "Standardized SBAR (Situation, Background, Assessment, Recommendation) communication protocols significantly reduce clinical handoff errors during patient referrals.",
+          supportingStatistic:
+            "Implementation of structured SBAR handoffs reduces critical omission errors during emergency transfers by over 30%.",
+          sourceTitle: "Impact of SBAR communication protocol on patient safety in clinical handovers",
+          sourceOrganization: "National Center for Biotechnology Information (PubMed Central)",
+          publicationDate: "2021",
+          originalSourceUrl: "https://pubmed.ncbi.nlm.nih.gov/?term=SBAR+clinical+handover+patient+safety",
+          evidenceType: "Academic Paper",
+          relevanceToProblem:
+            "Supports automating SBAR referral packets as a high-impact, clinically validated intervention.",
+          businessOrSocialOpportunity:
+            "Directly addresses hospital intake rejection and referral delays.",
+          evidenceStrength: "Strong Evidence",
+          isVerifiedExternal: true,
+          verificationNote: "Indexed medical literature reference.",
+        },
+      ],
+      report: {
+        problemOverview:
+          "Rural primary healthcare facilities face severe clinician-to-patient ratio constraints while relying on manual paper vitals and static PDF guidelines for urgent triage.",
+        supportingEvidenceSummary:
+          "Authoritative data from the World Health Organization (WHO) and peer-reviewed clinical informatics literature confirm both the structural workforce bottleneck and the efficacy of structured Clinical Decision Support Systems (CDSS) and SBAR handoff automation.",
+        statisticalInsights: [
+          "10M projected global health workforce deficit by 2030 (WHO), concentrated in rural primary care.",
+          "12%–28% improvement in clinical guideline adherence when frontline staff use structured CDSS.",
+          ">30% reduction in critical handoff omissions when using standardized SBAR referral templates.",
+        ],
+        researchFindingsSummary:
+          "Desk research confirms that passive digital manuals fail under time pressure; effective interventions must integrate directly into the intake workflow and produce actionable handoff artifacts.",
+        marketOrSocialImpact:
+          "Deploying rapid multimodal triage across community health clinics can save thousands of nursing hours monthly and accelerate emergency maternal and infectious disease referrals.",
+        overallValidationStrength: "Strong Evidence",
+        evidenceGaps: [
+          "Desk research is strong, but localized time-motion measurements inside target Puskesmas clinics should be collected during pilot testing.",
+        ],
+        opportunityAnalysis:
+          "By combining multimodal capture (voice + photo of vital charts) with strict guideline grounding, the project bridges the gap between clinical compliance and speed.",
+        deskVsCustomerDistinction:
+          "IMPORTANT DISTINCTION: The citations above represent verified desk research from academic and public health authorities, not direct primary user interviews. Field validation with practicing triage nurses is required to validate UI ergonomics.",
+      },
+    },
+    step5_solutionGenerator: {
+      selectedSolutionId: "sol-1",
+      comparisonSummary:
+        "While Option 2 (Patient Self-Triage Kiosk) and Option 3 (Hospital Referral Portal) address parts of the problem, Option 1 (MedTriage Rural AI — Multimodal Nurse Copilot) directly empowers the trained triage nurse, minimizes clinical safety risks via human-in-the-loop sign-off, and maximizes Gemini multimodal capabilities.",
+      recommendationReasoning:
+        "Recommended as the strongest competition entry because it aligns 100% with the 60% Innovation + Impact weight, avoids the regulatory hazard of autonomous patient self-diagnosis, and delivers a dramatic 60-second live demo.",
+      alternatives: [
+        {
+          id: "sol-1",
+          name: "MedTriage Rural AI — Multimodal Nurse Triage Copilot",
+          conceptDescription:
+            "An AI-assisted clinical triage workspace where nurses capture a photo of paper vital logs and speak patient symptoms; the system cross-checks official clinical guidelines, flags red-flag urgency levels, and generates a one-click SBAR referral PDF.",
+          targetUser: "Frontline Triage Nurses at Rural Primary Care Clinics",
+          coreFunctionality: [
+            "Multimodal Vital & Symptom Intake (Voice + Chart Photo OCR)",
+            "Protocol-Grounded Red-Flag Risk Stratification (Emergency / Urgent / Non-Urgent)",
+            "One-Click SBAR Hospital Referral Packet Generator with Guideline Citations",
+          ],
+          innovation:
+            "Fuses simultaneous voice narration, handwritten vital chart extraction, and strict clinical SOP citation grounding in a single 60-second workflow.",
+          expectedImpact:
+            "Cuts complex triage & referral documentation time from 20 minutes to under 90 seconds while surfacing critical clinical red flags.",
+          technicalComplexity: "Medium",
+          feasibility: "High — buildable within hackathon timeline using Gemini Multimodal JSON mode + Next.js.",
+          feasibilityScore: 90,
+          competitiveDifferentiation:
+            "Unlike generic medical chatbots, every output is strictly pinned to official clinical SOP passages and outputs a hospital-ready SBAR referral document.",
+          judgeAlignment:
+            "Directly showcases multimodal AI (Innovation 30%) on a WHO-validated problem (Impact 30%) with human-in-the-loop safety (Feasibility 15%).",
+          judgeAlignmentScore: 94,
+          isRecommended: true,
+        },
+        {
+          id: "sol-2",
+          name: "Direct-to-Patient WhatsApp Symptom Triage Bot",
+          conceptDescription:
+            "A conversational WhatsApp bot allowing rural citizens to self-report symptoms before visiting the clinic.",
+          targetUser: "Rural Patients & Families",
+          coreFunctionality: [
+            "Regional language voice-note symptom checker",
+            "Automated clinic queue booking",
+            "Self-care guidance messages",
+          ],
+          innovation: "Accessible voice-note interface over low-bandwidth messaging.",
+          expectedImpact: "Reduces unnecessary clinic visits for mild conditions.",
+          technicalComplexity: "Medium",
+          feasibility: "Moderate — requires WhatsApp Business API approval and carries higher clinical liability risk.",
+          feasibilityScore: 72,
+          competitiveDifferentiation: "Zero-install messaging UX for patients.",
+          judgeAlignment:
+            "High social reach, but judges often penalize direct-to-patient medical advice due to safety and hallucination liability.",
+          judgeAlignmentScore: 74,
+          isRecommended: false,
+        },
+        {
+          id: "sol-3",
+          name: "Regional Hospital Bed & Referral Matching Network",
+          conceptDescription:
+            "A real-time dashboard matching rural clinics with available ICU/specialist beds across regional hospitals.",
+          targetUser: "Hospital Referral Coordinators",
+          coreFunctionality: [
+            "Live hospital capacity dashboard",
+            "Automated referral routing",
+            "Ambulance dispatch tracking",
+          ],
+          innovation: "Predictive capacity routing across regional hospital networks.",
+          expectedImpact: "Prevents referred patients from being turned away at full hospitals.",
+          technicalComplexity: "High",
+          feasibility: "Low for a hackathon — depends heavily on multi-hospital EHR integration.",
+          feasibilityScore: 60,
+          competitiveDifferentiation: "Network-level logistics optimization.",
+          judgeAlignment:
+            "Lighter use of generative AI; judges in an AI hackathon may view this primarily as a CRUD logistics app.",
+          judgeAlignmentScore: 68,
+          isRecommended: false,
+        },
+      ],
+    },
+    step6_productDesign: {
+      productIdentity: {
+        applicationName: "MedTriage Rural AI",
+        tagline: "60-Second Multimodal Clinical Triage & SBAR Referral Copilot",
+        productVision:
+          "Ensure every frontline clinic nurse has instant, guideline-grounded clinical decision support regardless of geography.",
+        productMission:
+          "Eliminate administrative referral bottlenecks and prevent missed high-risk clinical red flags through safe multimodal AI.",
+      },
+      valueProposition: {
+        mainValueProposition:
+          "Transforms a 20-minute manual triage and referral writing process into a 60-second protocol-verified workflow using voice and chart photo capture.",
+        uniqueSellingProposition:
+          "Zero-typing multimodal intake paired with verifiable Ministry of Health guideline citations and instant SBAR hospital handoff generation.",
+        competitiveDifferentiation:
+          "Built specifically for nurse-in-the-loop triage compliance rather than unverified consumer symptom chatting.",
+      },
+      features: [
+        {
+          id: "feat-1",
+          name: "Multimodal Vital & Voice Intake",
+          description: "Upload/snap a photo of paper vital logs and record a 30-second symptom summary.",
+          tier: "MVP",
+          moscow: "Must Have",
+        },
+        {
+          id: "feat-2",
+          name: "Protocol-Grounded Triage Risk Scorer",
+          description: "Classifies case into Red (Emergency), Yellow (Urgent), or Green (Standard) with exact SOP citations.",
+          tier: "MVP",
+          moscow: "Must Have",
+        },
+        {
+          id: "feat-3",
+          name: "One-Click SBAR Referral PDF Generator",
+          description: "Compiles structured Situation-Background-Assessment-Recommendation referral letter with nurse sign-off.",
+          tier: "MVP",
+          moscow: "Must Have",
+        },
+        {
+          id: "feat-4",
+          name: "Clinician Human-in-the-Loop Verification Checklist",
+          description: "Mandatory safety confirmation before finalizing any triage escalation.",
+          tier: "CORE",
+          moscow: "Should Have",
+        },
+        {
+          id: "feat-5",
+          name: "Offline Local Queue & Background Sync",
+          description: "Caches patient intake in IndexedDB when clinic connectivity drops.",
+          tier: "CORE",
+          moscow: "Could Have",
+        },
+        {
+          id: "feat-6",
+          name: "National SATUSEHAT / FHIR EHR Integration",
+          description: "Direct bi-directional interoperability with national health information exchange.",
+          tier: "FUTURE",
+          moscow: "Won't Have Yet",
+        },
+      ],
+      userExperience: {
+        targetUserPersonaSummary:
+          "Ners Rina (29), frontline Puskesmas triage nurse managing 45+ daily intakes under high time pressure.",
+        userJourneyStages: [
+          {
+            stage: "1. Patient Arrival & Intake",
+            action: "Nurse snaps photo of paper vital sheet and speaks chief complaint.",
+            outcome: "Structured vitals and symptoms extracted in 5 seconds.",
+          },
+          {
+            stage: "2. Protocol Risk Assessment",
+            action: "AI cross-references symptoms + vitals against clinical SOPs.",
+            outcome: "Displays urgency tier, red-flag warnings, and exact guideline page citation.",
+          },
+          {
+            stage: "3. Nurse Verification & SBAR Export",
+            action: "Nurse reviews checklist, edits if needed, and clicks Export SBAR Referral.",
+            outcome: "Hospital-ready referral packet generated in under 60 seconds total.",
+          },
+        ],
+        userFlowSteps: [
+          "Open New Triage Case",
+          "Capture Vital Chart Photo + Voice Note",
+          "AI Multimodal Extraction & Guideline Matching",
+          "Review Triage Tier & Citations",
+          "Complete Nurse Sign-Off Checklist",
+          "Export SBAR Referral PDF",
+        ],
+        mainApplicationScreens: [
+          {
+            screenName: "Rapid Multimodal Intake Console",
+            purpose: "Single-screen camera + microphone capture with instant structured vital preview.",
+            keyInteractions: ["Snap Vital Sheet", "Record Symptom Audio", "Run Protocol Check"],
+          },
+          {
+            screenName: "Grounded Triage & Citation Inspector",
+            purpose: "Displays Red/Yellow/Green triage badge alongside verbatim clinical SOP citations.",
+            keyInteractions: ["Inspect SOP Citation", "Override Triage Level", "Verify Red Flags"],
+          },
+          {
+            screenName: "SBAR Referral Builder & PDF Preview",
+            purpose: "Editable SBAR clinical handoff document ready for printing or WhatsApp/PDF share.",
+            keyInteractions: ["Edit SBAR Fields", "Nurse Digital Sign-Off", "Export A4 Referral PDF"],
+          },
+        ],
+        mermaidUserFlow: `flowchart LR
+    A["Nurse Opens Triage Console"] --> B["Capture Vital Chart Photo + Voice Note"]
+    B --> C["Gemini Multimodal Extraction"]
+    C --> D["SOP Guideline Grounding Engine"]
+    D --> E{"Red-Flag Emergency?"}
+    E -- "Yes (High Risk)" --> F["Trigger Urgent Escalation Alert"]
+    E -- "No (Standard/Moderate)" --> G["Generate Standard Triage Summary"]
+    F --> H["Nurse Human-in-the-Loop Sign-Off"]
+    G --> H
+    H --> I["Export Standardized SBAR Referral PDF"]`,
+      },
+    },
+    step7_technicalArchitecture: {
+      systemArchitecture: {
+        frontend: "Next.js 15 (App Router), React 19, TypeScript, Tailwind CSS, PWA IndexedDB Offline Cache",
+        backend: "Next.js Route Handlers (Node.js Runtime) with Typed Schema Validation",
+        database: "PostgreSQL with Prisma ORM + pgvector for Clinical SOP Embeddings",
+        cloudInfrastructure: "Vercel Edge & Serverless Functions + Managed PostgreSQL (Supabase/Neon)",
+        authentication: "NextAuth / Session Auth with Role-Based Clinician Access Control",
+        storage: "Encrypted Object Storage for temporary clinical chart images",
+        analytics: "PostHog Privacy-Preserving Audit & Latency Telemetry",
+        thirdPartyApis: "Google Gemini Multimodal API, OpenAlex/PubMed Evidence API",
+        aiIntegration:
+          "Gemini 2.5 Flash Multimodal (Audio + Vision + Structured JSON Response Schema) grounded with retrieved Ministry of Health SOP chunks",
+      },
+      techStackTable: [
+        {
+          layer: "Frontend",
+          technology: "Next.js 15 + TypeScript + Tailwind CSS",
+          rationale: "Fast SSR/CSR hybrid rendering with built-in PWA capabilities for low-connectivity clinics.",
+        },
+        {
+          layer: "Backend",
+          technology: "Next.js API Routes (TypeScript)",
+          rationale: "Unified full-stack type safety and zero-overhead deployment within hackathon timelines.",
+        },
+        {
+          layer: "Database",
+          technology: "PostgreSQL + Prisma ORM",
+          rationale: "ACID compliance for clinical audit logs plus vector search support for SOP retrieval.",
+        },
+        {
+          layer: "AI Engine",
+          technology: "Google Gemini 2.5 Flash Multimodal API",
+          rationale: "Native multimodal ingestion (audio + image + text) with low latency and strict JSON schema outputs.",
+        },
+        {
+          layer: "PDF & Diagrams",
+          technology: "Mermaid.js + A4 Print CSS Engine",
+          rationale: "Deterministic, print-accurate SBAR and architecture document generation.",
+        },
+      ],
+      deliverables: {
+        systemOverview:
+          "MedTriage Rural AI uses a 3-tier architecture combining a responsive multimodal capture client, a stateless API orchestration layer with RAG guideline retrieval, and an audited PostgreSQL persistence store.",
+        architectureExplanation:
+          "When a nurse uploads a vital sign photo and voice recording, the backend validates the session, retrieves relevant clinical guideline passages from PostgreSQL, and invokes the Gemini Multimodal endpoint with a strict JSON schema contract.",
+        componentResponsibilities: [
+          {
+            component: "Multimodal Intake Client",
+            responsibility: "Captures camera frames and WebAudio streams, compresses payloads, and renders structured triage cards.",
+          },
+          {
+            component: "Clinical RAG & Prompt Guard",
+            responsibility: "Injects verified SOP protocol sections and enforces non-diagnostic decision-support guardrails.",
+          },
+          {
+            component: "SBAR Document Compiler",
+            responsibility: "Formats verified triage data into standardized A4 hospital referral documents.",
+          },
+        ],
+        databaseDesign:
+          "Relational tables for Clinicians, TriageEncounters, VitalReadings, GuidelineCitations, and AuditLogs.",
+        apiIntegrationPlan:
+          "RESTful JSON endpoints (`POST /api/triage/analyze`, `POST /api/triage/signoff`, `GET /api/protocols/search`) with rate limiting.",
+        aiIntegrationStrategy:
+          "Use structured JSON schema enforcement so the LLM always returns `urgencyLevel`, `extractedVitals`, `redFlags[]`, `sopCitations[]`, and `sbarDraft`.",
+        securityConsiderations:
+          "PII scrubbing before external LLM calls, HTTPS/TLS encryption in transit, clinician session authentication, and mandatory human sign-off.",
+        deploymentStrategy:
+          "Continuous deployment via GitHub to Vercel with managed PostgreSQL and environment-isolated API keys.",
+        technicalRisks: [
+          {
+            risk: "LLM Hallucination of Clinical Guidelines",
+            severity: "High",
+            mitigation: "Restrict AI reasoning strictly to retrieved SOP chunks and display verbatim source excerpts next to every alert.",
+          },
+          {
+            risk: "Poor Lighting on Handwritten Vital Charts",
+            severity: "Medium",
+            mitigation: "Render extracted vitals in editable numeric inputs with confidence highlights for nurse verification.",
+          },
+        ],
+      },
+      mermaidSystemDiagram: `flowchart TD
+    subgraph Clinic["Frontline Clinic Device (Next.js PWA)"]
+        UI["Multimodal Capture UI (Voice + Vital Photo)"]
+        SIGN["Nurse Verification & SBAR Editor"]
+    end
+
+    subgraph Server["Application Backend (Next.js API Layer)"]
+        AUTH["Session & Role Guard"]
+        RAG["Clinical SOP Retriever"]
+        ORCH["Multimodal AI Orchestrator"]
+    end
+
+    subgraph External["AI & Data Infrastructure"]
+        GEMINI["Google Gemini Multimodal API"]
+        PG[("PostgreSQL + SOP Vector Store")]
+    end
+
+    UI --> AUTH --> ORCH
+    ORCH --> RAG --> PG
+    ORCH --> GEMINI
+    GEMINI --> SIGN
+    SIGN --> PG`,
+    },
+    step8_developmentTimeline: {
+      totalDuration: "48 Hours (Weekend Hackathon Sprint)",
+      teamSize: 4,
+      teamRoles: [
+        "Product Manager & Pitch Lead",
+        "AI & Backend Engineer",
+        "Frontend & UX Engineer",
+        "Clinical Research & QA Lead",
+      ],
+      developmentDeadline: "Sunday 17:00 WIB",
+      currentProgress: "All 10 Planning Modules Completed — Ready for Prototype Build",
+      milestones: [
+        {
+          id: "ms-1",
+          orderIndex: 1,
+          periodLabel: "Hours 1–6",
+          activity: "Problem Validation, SOP Dataset Curation & Architecture Setup",
+          objective: "Lock down clinical triage scope, verify citations, and initialize Next.js + Prisma repo.",
+          tasks: [
+            "Finalize 3 high-priority clinical SOP protocols (Maternal, Dengue, Acute Respiratory)",
+            "Initialize Next.js repository, database schema, and API routes",
+          ],
+          responsibleRole: "All Team Members",
+          expectedOutput: "Validated Problem Brief + Running Repo Skeleton",
+          dependencies: "Competition theme confirmation",
+          completionCriteria: "Repo deployed to staging URL and SOP JSON indexed.",
+          completed: true,
+        },
+        {
+          id: "ms-2",
+          orderIndex: 2,
+          periodLabel: "Hours 7–18",
+          activity: "Core Multimodal Intake & Protocol Grounding Pipeline",
+          objective: "Build voice + image upload pipeline connected to Gemini Multimodal structured output.",
+          tasks: [
+            "Implement camera/photo upload and audio transcript capture",
+            "Build structured JSON prompt with SOP citation matching",
+          ],
+          responsibleRole: "AI & Backend Engineer",
+          expectedOutput: "Working `/api/triage/analyze` endpoint returning structured JSON",
+          dependencies: "Milestone 1",
+          completionCriteria: "End-to-end multimodal extraction responds in under 4 seconds.",
+          completed: true,
+        },
+        {
+          id: "ms-3",
+          orderIndex: 3,
+          periodLabel: "Hours 19–32",
+          activity: "Nurse Triage Console UI & SBAR PDF Generator",
+          objective: "Connect frontend console to AI pipeline and implement one-click SBAR PDF export.",
+          tasks: [
+            "Build Red/Yellow/Green triage card UI with verbatim SOP citations",
+            "Implement Human-in-the-Loop sign-off modal and A4 SBAR print view",
+          ],
+          responsibleRole: "Frontend & UX Engineer",
+          expectedOutput: "Interactive Triage Dashboard + SBAR PDF Export",
+          dependencies: "Milestone 2",
+          completionCriteria: "Complete user flow works seamlessly on desktop and tablet.",
+          completed: true,
+        },
+        {
+          id: "ms-4",
+          orderIndex: 4,
+          periodLabel: "Hours 33–48",
+          activity: "End-to-End QA, Demo Video Recording & Pitch Rehearsal",
+          objective: "Stress-test edge cases, record 3-minute demo video, and align pitch with judge weights.",
+          tasks: [
+            "Run 10 clinical test scenarios and verify citation accuracy",
+            "Finalize Pitch Deck, Demo Video, and export Final Project Brief PDF",
+          ],
+          responsibleRole: "Product Manager & QA Lead",
+          expectedOutput: "Submission-Ready Package (Live URL, GitHub, Deck, Video, Brief PDF)",
+          dependencies: "Milestone 3",
+          completionCriteria: "All mandatory deliverables checked off 3 hours before deadline.",
+          completed: true,
+        },
+      ],
+    },
+    step9_deliverables: {
+      competitionSpecificNotes:
+        "Ensure the 3-minute demo video shows real multimodal input (photo of vitals + voice) within the first 45 seconds.",
+      items: DEFAULT_DELIVERABLES.map((item, idx) => ({
+        ...item,
+        completed: idx < 10,
+      })),
+    },
+    judgeScore: {
+      id: "score-seed",
+      timestamp: new Date().toISOString(),
+      overallScore: 91.5,
+      categories: [],
+      weakestCategory: "Feasibility",
+      improvementSuggestions: [],
+      confidenceWarning: null,
+    },
+    scoreHistory: [
+      {
+        timestamp: new Date(Date.now() - 3600000 * 12).toISOString(),
+        overallScore: 64.0,
+        trigger: "Step 3: Problem Discovery Saved",
+      },
+      {
+        timestamp: new Date(Date.now() - 3600000 * 6).toISOString(),
+        overallScore: 81.5,
+        trigger: "Step 5: Solution Selected",
+      },
+      {
+        timestamp: new Date().toISOString(),
+        overallScore: 92.4,
+        trigger: "Step 10: Final Brief Compiled",
+      },
+    ],
+    aiHistory: [
+      {
+        id: "hist-1",
+        stepNumber: 1,
+        moduleName: "Competition Theme Analyzer",
+        providerMode: "STRATEGIST_DEV_ENGINE",
+        timestamp: new Date(Date.now() - 3600000 * 14).toISOString(),
+        summary: "Generated 7-part competition theme breakdown and innovation directions.",
+      },
+      {
+        id: "hist-2",
+        stepNumber: 4,
+        moduleName: "Evidence Validation Engine",
+        providerMode: "STRATEGIST_DEV_ENGINE",
+        timestamp: new Date(Date.now() - 3600000 * 10).toISOString(),
+        summary: "Retrieved and verified 3 authoritative clinical & public health citations.",
+      },
+      {
+        id: "hist-3",
+        stepNumber: 5,
+        moduleName: "Solution Generator",
+        providerMode: "STRATEGIST_DEV_ENGINE",
+        timestamp: new Date(Date.now() - 3600000 * 6).toISOString(),
+        summary: "Generated 3 distinct solution alternatives and comparative judge alignment matrix.",
+      },
+    ],
+  };
+
+  // Compute live score and compiled brief
+  baseProject.judgeScore = calculateJudgeScore(baseProject);
+  baseProject.completionPercentage = calculateCompletionPercentage(baseProject);
+  return baseProject;
+}
+
+function getInitialDb(): DatabaseSchema {
+  const defaultUser: User = {
+    id: "user-owner-1",
+    email: "valerio@ideationmaker.ai",
+    name: "Christian Immanuel Valerio",
+    passwordHash: "demo1234",
+    role: "PRODUCT_OWNER",
+    preferredLang: "en",
+    createdAt: new Date().toISOString(),
+  };
+
+  const secondUser: User = {
+    id: "user-other-2",
+    email: "rival@hackathon.dev",
+    name: "Rival Hackathon Team",
+    passwordHash: "demo1234",
+    role: "HACKATHON_PARTICIPANT",
+    preferredLang: "en",
+    createdAt: new Date().toISOString(),
+  };
+
+  return {
+    users: [defaultUser, secondUser],
+    projects: [createSeedProject(defaultUser.id)],
+  };
+}
+
+export function readDb(): DatabaseSchema {
+  try {
+    if (!fs.existsSync(DATA_DIR)) {
+      fs.mkdirSync(DATA_DIR, { recursive: true });
+    }
+    if (!fs.existsSync(DB_FILE)) {
+      const initial = getInitialDb();
+      fs.writeFileSync(DB_FILE, JSON.stringify(initial, null, 2), "utf-8");
+      return initial;
+    }
+    const raw = fs.readFileSync(DB_FILE, "utf-8");
+    const parsed = JSON.parse(raw) as DatabaseSchema;
+    if (!parsed.users || !parsed.projects) {
+      const initial = getInitialDb();
+      fs.writeFileSync(DB_FILE, JSON.stringify(initial, null, 2), "utf-8");
+      return initial;
+    }
+    return parsed;
+  } catch {
+    return getInitialDb();
+  }
+}
+
+export function writeDb(data: DatabaseSchema): void {
+  if (!fs.existsSync(DATA_DIR)) {
+    fs.mkdirSync(DATA_DIR, { recursive: true });
+  }
+  fs.writeFileSync(DB_FILE, JSON.stringify(data, null, 2), "utf-8");
+}
+
+export function createBlankProject(
+  userId: string,
+  userName: string,
+  preset?: {
+    title?: string;
+    competitionName?: string;
+    theme?: string;
+    domain?: string;
+    targetTech?: string;
+    description?: string;
+  }
+): Project {
+  const id = `proj-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+  const now = new Date().toISOString();
+
+  const newProject: Project = {
+    id,
+    userId,
+    title: preset?.title || "Untitled Hackathon Strategy",
+    tagline: "Transforming competition themes into validated, execution-ready project briefs.",
+    teamName: "Alpha Innovation Team",
+    preparedBy: userName || "Hackathon Team Lead",
+    status: "IN_PROGRESS",
+    currentStep: 1,
+    completionPercentage: 10,
+    lastEditedAt: now,
+    createdAt: now,
+    step1_competition: {
+      name: preset?.competitionName || "",
+      theme: preset?.theme || "",
+      description: preset?.description || "",
+      domain: preset?.domain || "",
+      targetTechnology: preset?.targetTech || "",
+      additionalContext: "",
+    },
+    step2_judgeCriteria: {
+      criteria: DEFAULT_JUDGE_CRITERIA.map((c) => ({ ...c })),
+    },
+    step3_problemDiscovery: {
+      whoExperiences: "",
+      biggestDifficulty: "",
+      frequency: "",
+      impact: "",
+      currentWorkarounds: "",
+      whyInsufficient: "",
+    },
+    step4_evidenceValidation: {
+      searchQuery: "",
+      evidenceItems: [],
+    },
+    step5_solutionGenerator: {
+      alternatives: [],
+      comparisonSummary: "",
+      recommendationReasoning: "",
+      selectedSolutionId: null,
+    },
+    step6_productDesign: {
+      productIdentity: {
+        applicationName: "",
+        tagline: "",
+        productVision: "",
+        productMission: "",
+      },
+      valueProposition: {
+        mainValueProposition: "",
+        uniqueSellingProposition: "",
+        competitiveDifferentiation: "",
+      },
+      features: [],
+      userExperience: {
+        targetUserPersonaSummary: "",
+        userJourneyStages: [],
+        userFlowSteps: [],
+        mainApplicationScreens: [],
+        mermaidUserFlow: "",
+      },
+    },
+    step7_technicalArchitecture: {
+      systemArchitecture: {
+        frontend: "",
+        backend: "",
+        database: "",
+        cloudInfrastructure: "",
+        authentication: "",
+        storage: "",
+        analytics: "",
+        thirdPartyApis: "",
+        aiIntegration: "",
+      },
+      techStackTable: [],
+      deliverables: {
+        systemOverview: "",
+        architectureExplanation: "",
+        componentResponsibilities: [],
+        databaseDesign: "",
+        apiIntegrationPlan: "",
+        aiIntegrationStrategy: "",
+        securityConsiderations: "",
+        deploymentStrategy: "",
+        technicalRisks: [],
+      },
+      mermaidSystemDiagram: "",
+    },
+    step8_developmentTimeline: {
+      totalDuration: "48 Hours",
+      teamSize: 4,
+      teamRoles: ["Product Manager", "Frontend Developer", "Backend / AI Engineer", "UI/UX Designer"],
+      developmentDeadline: new Date(Date.now() + 86400000 * 7).toISOString().slice(0, 10),
+      currentProgress: "Ideation & Validation Stage",
+      milestones: [],
+    },
+    step9_deliverables: {
+      competitionSpecificNotes: "",
+      items: DEFAULT_DELIVERABLES.map((item) => ({ ...item, id: `${item.id}-${Math.random().toString(36).slice(2, 6)}` })),
+    },
+    judgeScore: {
+      id: `score-${Date.now()}`,
+      timestamp: now,
+      overallScore: 0,
+      categories: [],
+      weakestCategory: "Impact",
+      improvementSuggestions: [],
+      confidenceWarning: null,
+    },
+    scoreHistory: [],
+    aiHistory: [],
+  };
+
+  newProject.judgeScore = calculateJudgeScore(newProject);
+  newProject.completionPercentage = calculateCompletionPercentage(newProject);
+  newProject.scoreHistory.push({
+    timestamp: now,
+    overallScore: newProject.judgeScore.overallScore,
+    trigger: "Project Initialized",
+  });
+
+  return newProject;
+}
+
+// Repository functions with strict user authorization
+export function getUserProjects(userId: string): Project[] {
+  const db = readDb();
+  return db.projects
+    .filter((p) => p.userId === userId)
+    .sort((a, b) => new Date(b.lastEditedAt).getTime() - new Date(a.lastEditedAt).getTime());
+}
+
+export function getAuthorizedProject(projectId: string, userId: string): {
+  project?: Project;
+  status: 200 | 403 | 404;
+  error?: string;
+} {
+  const db = readDb();
+  const project = db.projects.find((p) => p.id === projectId);
+  if (!project) {
+    return { status: 404, error: "Project not found." };
+  }
+  if (project.userId !== userId) {
+    return {
+      status: 403,
+      error: "Unauthorized: You do not have permission to access this private project.",
+    };
+  }
+  return { status: 200, project };
+}
+
+export function saveAuthorizedProject(
+  projectId: string,
+  userId: string,
+  updates: Partial<Project>,
+  triggerLabel?: string
+): {
+  project?: Project;
+  status: 200 | 403 | 404;
+  error?: string;
+} {
+  const db = readDb();
+  const index = db.projects.findIndex((p) => p.id === projectId);
+  if (index === -1) {
+    return { status: 404, error: "Project not found." };
+  }
+  const existing = db.projects[index];
+  if (existing.userId !== userId) {
+    return {
+      status: 403,
+      error: "Unauthorized: Cannot modify another user's private project.",
+    };
+  }
+
+  const merged: Project = {
+    ...existing,
+    ...updates,
+    id: existing.id,
+    userId: existing.userId,
+    lastEditedAt: new Date().toISOString(),
+  };
+
+  merged.completionPercentage = calculateCompletionPercentage(merged);
+  merged.judgeScore = calculateJudgeScore(merged);
+
+  if (merged.completionPercentage === 100) {
+    merged.status = "READY_FOR_PITCH";
+  } else if ((merged.step4_evidenceValidation?.evidenceItems?.length || 0) > 0) {
+    merged.status = "VALIDATED";
+  } else {
+    merged.status = "IN_PROGRESS";
+  }
+
+  const prevLastScore = merged.scoreHistory[merged.scoreHistory.length - 1]?.overallScore;
+  if (prevLastScore !== merged.judgeScore.overallScore || triggerLabel) {
+    merged.scoreHistory = [
+      ...(merged.scoreHistory || []).slice(-14),
+      {
+        timestamp: new Date().toISOString(),
+        overallScore: merged.judgeScore.overallScore,
+        trigger: triggerLabel || `Step ${merged.currentStep} Updated`,
+      },
+    ];
+  }
+
+  db.projects[index] = merged;
+  writeDb(db);
+  return { status: 200, project: merged };
+}
+
+export function duplicateAuthorizedProject(
+  projectId: string,
+  userId: string
+): {
+  project?: Project;
+  status: 200 | 403 | 404;
+  error?: string;
+} {
+  const db = readDb();
+  const existing = db.projects.find((p) => p.id === projectId);
+  if (!existing) {
+    return { status: 404, error: "Project not found." };
+  }
+  if (existing.userId !== userId) {
+    return { status: 403, error: "Unauthorized: Cannot duplicate another user's project." };
+  }
+
+  const now = new Date().toISOString();
+  const copy: Project = JSON.parse(JSON.stringify(existing));
+  copy.id = `proj-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
+  copy.title = `${existing.title} (Copy)`;
+  copy.createdAt = now;
+  copy.lastEditedAt = now;
+
+  db.projects.unshift(copy);
+  writeDb(db);
+  return { status: 200, project: copy };
+}
+
+export function deleteAuthorizedProject(
+  projectId: string,
+  userId: string
+): {
+  status: 200 | 403 | 404;
+  error?: string;
+} {
+  const db = readDb();
+  const existing = db.projects.find((p) => p.id === projectId);
+  if (!existing) {
+    return { status: 404, error: "Project not found." };
+  }
+  if (existing.userId !== userId) {
+    return { status: 403, error: "Unauthorized: Cannot delete another user's project." };
+  }
+
+  db.projects = db.projects.filter((p) => p.id !== projectId);
+  writeDb(db);
+  return { status: 200 };
+}
