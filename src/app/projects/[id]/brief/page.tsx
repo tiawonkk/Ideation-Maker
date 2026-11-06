@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback, useRef } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { useApp } from "@/components/layout/AppProvider";
@@ -65,29 +65,43 @@ export default function FinalBriefPage() {
     [project, showToast]
   );
 
+  const saveRef = useRef(saveProjectUpdates);
+  saveRef.current = saveProjectUpdates;
+  const projectRef = useRef(project);
+  projectRef.current = project;
+
+  const projId = project?.id;
+  const projTitle = project?.title;
+  const projLastEdited = project?.lastEditedAt;
+  const projScore = project?.judgeScore?.overallScore ?? 0;
+
   useEffect(() => {
-    if (!project) return;
-    const timeStr = new Date(project.lastEditedAt).toLocaleTimeString([], {
-      hour: "2-digit",
-      minute: "2-digit",
-    });
+    if (!projId || !projTitle) return;
+    const timeStr = projLastEdited
+      ? new Date(projLastEdited).toLocaleTimeString([], {
+          hour: "2-digit",
+          minute: "2-digit",
+        })
+      : "Just now";
     setWorkspaceHeader({
-      projectId: project.id,
-      projectTitle: project.title,
+      projectId: projId,
+      projectTitle: projTitle,
       saving: isGenerating,
       lastSavedAt: timeStr,
-      overallScore: project.judgeScore?.overallScore ?? 0,
+      overallScore: projScore,
       onUpdateTitle: (newTitle: string) => {
-        saveProjectUpdates(
-          { ...project, title: newTitle },
-          "Project Renamed"
-        );
+        if (projectRef.current) {
+          saveRef.current(
+            { ...projectRef.current, title: newTitle },
+            "Project Renamed"
+          );
+        }
       },
       onQuickExportPdf: () => {
         window.print();
       },
     });
-  }, [project, isGenerating, setWorkspaceHeader, saveProjectUpdates]);
+  }, [projId, projTitle, projLastEdited, projScore, isGenerating, setWorkspaceHeader]);
 
   const handleRegenerate = async (sectionKey?: keyof FinalBriefSections) => {
     if (!project) return;

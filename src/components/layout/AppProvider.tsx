@@ -1,6 +1,12 @@
 "use client";
 
-import React, { createContext, useContext, useEffect, useState } from "react";
+import React, {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useState,
+} from "react";
 import { Language } from "@/types/project";
 import { dictionary } from "@/lib/i18n/dictionary";
 
@@ -87,28 +93,35 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const setTheme = (mode: ThemeMode) => {
+  const setTheme = useCallback((mode: ThemeMode) => {
     setThemeState(mode);
     applyDomTheme(mode);
     localStorage.setItem("ideation_theme", mode);
-  };
+  }, []);
 
-  const toggleTheme = () => {
-    const next = theme === "dark" ? "light" : "dark";
-    setTheme(next);
-  };
+  const toggleTheme = useCallback(() => {
+    setThemeState((prev) => {
+      const next = prev === "dark" ? "light" : "dark";
+      applyDomTheme(next);
+      localStorage.setItem("ideation_theme", next);
+      return next;
+    });
+  }, []);
 
-  const showToast = (
-    message: string,
-    type: "success" | "error" | "info" = "success"
-  ) => {
-    setToast({ message, type });
-    setTimeout(() => {
-      setToast((prev) => (prev?.message === message ? null : prev));
-    }, 3600);
-  };
+  const showToast = useCallback(
+    (
+      message: string,
+      type: "success" | "error" | "info" = "success"
+    ) => {
+      setToast({ message, type });
+      setTimeout(() => {
+        setToast((prev) => (prev?.message === message ? null : prev));
+      }, 3600);
+    },
+    []
+  );
 
-  const refreshUser = async () => {
+  const refreshUser = useCallback(async () => {
     try {
       const res = await fetch("/api/auth");
       if (res.ok) {
@@ -119,19 +132,22 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     } catch {
       // ignore offline
     }
-  };
+  }, []);
 
-  const switchAccount = async (userId: string) => {
-    const res = await fetch("/api/auth", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ action: "switch", userId }),
-    });
-    if (res.ok) {
-      await refreshUser();
-      showToast("Switched active workspace account", "info");
-    }
-  };
+  const switchAccount = useCallback(
+    async (userId: string) => {
+      const res = await fetch("/api/auth", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "switch", userId }),
+      });
+      if (res.ok) {
+        await refreshUser();
+        showToast("Switched active workspace account", "info");
+      }
+    },
+    [refreshUser, showToast]
+  );
 
   useEffect(() => {
     refreshUser();
