@@ -46,31 +46,31 @@ export default function AuthPage() {
     <div className="mx-auto max-w-4xl px-4 py-12 sm:px-6">
       <div className="grid gap-8 md:grid-cols-2">
         {/* Left: Sign In / Register Form */}
-        <div className="rounded-2xl border border-white/10 bg-[#11131c] p-6 sm:p-8 shadow-xl">
+        <div className="glass-panel rounded-3xl p-6 sm:p-8">
           <div className="flex items-center gap-2.5">
-            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-indigo-500/15 text-indigo-400">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-500/15 text-indigo-600 dark:text-indigo-400">
               <Lock className="h-5 w-5" />
             </div>
             <div>
-              <h1 className="text-lg font-bold text-white">
+              <h1 className="text-lg font-extrabold">
                 {mode === "login"
                   ? "Sign In to Workspace"
                   : "Create Team Account"}
               </h1>
-              <p className="text-xs text-slate-400">
+              <p className="text-xs text-slate-500 dark:text-slate-400">
                 Private hackathon projects are isolated per owner account.
               </p>
             </div>
           </div>
 
-          <div className="mt-6 flex rounded-lg border border-white/10 bg-[#090a0f] p-1 text-xs font-medium">
+          <div className="mt-6 flex rounded-xl border border-slate-300/80 dark:border-white/10 bg-slate-200/60 dark:bg-black/30 p-1 text-xs font-bold">
             <button
               type="button"
               onClick={() => setMode("login")}
-              className={`flex-1 rounded-md py-2 transition ${
+              className={`flex-1 rounded-lg py-2 transition ${
                 mode === "login"
-                  ? "bg-indigo-600 text-white"
-                  : "text-slate-400 hover:text-white"
+                  ? "bg-white text-indigo-600 shadow-sm dark:bg-indigo-600 dark:text-white"
+                  : "text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
               }`}
             >
               Sign In
@@ -78,10 +78,10 @@ export default function AuthPage() {
             <button
               type="button"
               onClick={() => setMode("register")}
-              className={`flex-1 rounded-md py-2 transition ${
+              className={`flex-1 rounded-lg py-2 transition ${
                 mode === "register"
-                  ? "bg-indigo-600 text-white"
-                  : "text-slate-400 hover:text-white"
+                  ? "bg-white text-indigo-600 shadow-sm dark:bg-indigo-600 dark:text-white"
+                  : "text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
               }`}
             >
               Create Account
@@ -91,7 +91,7 @@ export default function AuthPage() {
           <form onSubmit={handleSubmit} className="mt-6 space-y-4">
             {mode === "register" && (
               <div>
-                <label className="block text-xs font-medium text-slate-300">
+                <label className="block text-xs font-semibold">
                   Full Name / Team Lead
                 </label>
                 <input
@@ -100,13 +100,13 @@ export default function AuthPage() {
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   placeholder="e.g., Christian Immanuel Valerio"
-                  className="mt-1.5 w-full rounded-lg border border-white/10 bg-[#090a0f] px-3.5 py-2.5 text-sm text-white focus:border-indigo-500 focus:outline-none"
+                  className="mt-1.5 w-full text-sm glass-input"
                 />
               </div>
             )}
 
             <div>
-              <label className="block text-xs font-medium text-slate-300">
+              <label className="block text-xs font-semibold">
                 Email Address
               </label>
               <input
@@ -115,27 +115,25 @@ export default function AuthPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="you@team.dev"
-                className="mt-1.5 w-full rounded-lg border border-white/10 bg-[#090a0f] px-3.5 py-2.5 text-sm text-white focus:border-indigo-500 focus:outline-none"
+                className="mt-1.5 w-full text-sm glass-input"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-medium text-slate-300">
-                Password
-              </label>
+              <label className="block text-xs font-semibold">Password</label>
               <input
                 type="password"
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="mt-1.5 w-full rounded-lg border border-white/10 bg-[#090a0f] px-3.5 py-2.5 text-sm text-white focus:border-indigo-500 focus:outline-none"
+                className="mt-1.5 w-full text-sm glass-input"
               />
             </div>
 
             <button
               type="submit"
               disabled={loading}
-              className="flex w-full items-center justify-center gap-2 rounded-xl bg-indigo-600 py-3 text-xs font-semibold text-white hover:bg-indigo-500 disabled:opacity-50"
+              className="btn-apple-primary w-full py-3 text-xs font-bold"
             >
               {mode === "login" ? (
                 <>
@@ -154,30 +152,32 @@ export default function AuthPage() {
 
         {/* Right: Active Session & Multi-User Authorization Switcher */}
         <div className="space-y-6">
-          <div className="rounded-2xl border border-white/10 bg-[#11131c] p-6">
-            <div className="flex items-center gap-2 text-emerald-400 text-xs font-semibold uppercase tracking-wider">
+          <div className="glass-panel rounded-3xl p-6">
+            <div className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400 text-xs font-bold uppercase tracking-wider">
               <UserCheck className="h-4 w-4" />
               <span>Active Workspace Session</span>
             </div>
             {user ? (
               <div className="mt-3">
-                <div className="text-base font-bold text-white">{user.name}</div>
-                <div className="text-xs text-slate-400">{user.email}</div>
-                <div className="mt-2 inline-block rounded bg-indigo-500/15 px-2 py-0.5 text-[11px] font-medium text-indigo-300">
+                <div className="text-base font-extrabold">{user.name}</div>
+                <div className="text-xs text-slate-500 dark:text-slate-400">
+                  {user.email}
+                </div>
+                <div className="mt-2 inline-block rounded-lg bg-indigo-500/15 px-2.5 py-0.5 text-[11px] font-bold text-indigo-600 dark:text-indigo-300">
                   Role: {user.role}
                 </div>
               </div>
             ) : (
-              <p className="mt-2 text-xs text-slate-400">Loading session...</p>
+              <p className="mt-2 text-xs text-slate-500">Loading session...</p>
             )}
           </div>
 
-          <div className="rounded-2xl border border-white/10 bg-[#11131c] p-6">
-            <div className="flex items-center gap-2 text-indigo-400 text-xs font-semibold uppercase tracking-wider">
+          <div className="glass-panel rounded-3xl p-6">
+            <div className="flex items-center gap-2 text-indigo-600 dark:text-indigo-400 text-xs font-bold uppercase tracking-wider">
               <ShieldCheck className="h-4 w-4" />
               <span>Instant Account Switcher (Authorization QA)</span>
             </div>
-            <p className="mt-2 text-xs text-slate-400 leading-relaxed">
+            <p className="mt-2 text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
               Every project is strictly associated with its owner (`userId`).
               Switch between accounts below to verify that private projects
               cannot be accessed by other users.
@@ -188,20 +188,20 @@ export default function AuthPage() {
                 return (
                   <div
                     key={u.id}
-                    className={`flex items-center justify-between rounded-xl border p-3 ${
+                    className={`flex items-center justify-between rounded-2xl p-3.5 ${
                       isActive
-                        ? "border-indigo-500/50 bg-indigo-500/10"
-                        : "border-white/10 bg-[#090a0f]"
+                        ? "border-2 border-indigo-500/60 bg-indigo-500/10"
+                        : "glass-card"
                     }`}
                   >
                     <div>
-                      <div className="text-xs font-semibold text-white">
-                        {u.name}
+                      <div className="text-xs font-bold">{u.name}</div>
+                      <div className="text-[11px] text-slate-500">
+                        {u.email}
                       </div>
-                      <div className="text-[11px] text-slate-400">{u.email}</div>
                     </div>
                     {isActive ? (
-                      <span className="rounded bg-emerald-500/20 px-2 py-1 text-[10px] font-semibold text-emerald-300">
+                      <span className="rounded-full bg-emerald-500/20 px-2.5 py-1 text-[10px] font-bold text-emerald-700 dark:text-emerald-300">
                         Active
                       </span>
                     ) : (
@@ -210,7 +210,7 @@ export default function AuthPage() {
                           await switchAccount(u.id);
                           router.push("/dashboard");
                         }}
-                        className="rounded-lg bg-white/10 px-3 py-1.5 text-xs font-medium text-white hover:bg-indigo-600"
+                        className="btn-glass-secondary px-3 py-1.5 text-xs"
                       >
                         Switch
                       </button>

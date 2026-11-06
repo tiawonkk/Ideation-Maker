@@ -366,3 +366,4 @@ export interface Project {
   scoreHistory: { timestamp: string; overallScore: number; trigger: string }[];
   aiHistory: AIGenerationHistoryEntry[];
 }
+

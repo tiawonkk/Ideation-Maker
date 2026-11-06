@@ -10,7 +10,7 @@ import { ArrowLeft, ShieldAlert } from "lucide-react";
 
 export default function FinalBriefPage() {
   const params = useParams<{ id: string }>();
-  const { showToast, aiConfig } = useApp();
+  const { showToast, aiConfig, setWorkspaceHeader } = useApp();
 
   const [project, setProject] = useState<Project | null>(null);
   const [loading, setLoading] = useState(true);
@@ -34,30 +34,60 @@ export default function FinalBriefPage() {
 
   useEffect(() => {
     fetchProject();
-  }, [fetchProject]);
+    return () => {
+      setWorkspaceHeader(null);
+    };
+  }, [fetchProject, setWorkspaceHeader]);
 
-  const saveProjectUpdates = async (
-    updates: Partial<Project>,
-    triggerLabel?: string,
-    silent = false
-  ): Promise<Project | null> => {
-    if (!project) return null;
-    const res = await fetch(`/api/projects/${project.id}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        ...updates,
-        triggerLabel,
-      }),
+  const saveProjectUpdates = useCallback(
+    async (
+      updates: Partial<Project>,
+      triggerLabel?: string,
+      silent = false
+    ): Promise<Project | null> => {
+      if (!project) return null;
+      const res = await fetch(`/api/projects/${project.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ...updates,
+          triggerLabel,
+        }),
+      });
+      const data = await res.json();
+      if (res.ok && data.project) {
+        setProject(data.project);
+        if (!silent) showToast("Brief saved!", "success");
+        return data.project;
+      }
+      return null;
+    },
+    [project, showToast]
+  );
+
+  useEffect(() => {
+    if (!project) return;
+    const timeStr = new Date(project.lastEditedAt).toLocaleTimeString([], {
+      hour: "2-digit",
+      minute: "2-digit",
     });
-    const data = await res.json();
-    if (res.ok && data.project) {
-      setProject(data.project);
-      if (!silent) showToast("Brief saved!", "success");
-      return data.project;
-    }
-    return null;
-  };
+    setWorkspaceHeader({
+      projectId: project.id,
+      projectTitle: project.title,
+      saving: isGenerating,
+      lastSavedAt: timeStr,
+      overallScore: project.judgeScore?.overallScore ?? 0,
+      onUpdateTitle: (newTitle: string) => {
+        saveProjectUpdates(
+          { ...project, title: newTitle },
+          "Project Renamed"
+        );
+      },
+      onQuickExportPdf: () => {
+        window.print();
+      },
+    });
+  }, [project, isGenerating, setWorkspaceHeader, saveProjectUpdates]);
 
   const handleRegenerate = async (sectionKey?: keyof FinalBriefSections) => {
     if (!project) return;
@@ -93,8 +123,8 @@ export default function FinalBriefPage() {
 
   if (loading) {
     return (
-      <div className="mx-auto max-w-5xl p-8">
-        <div className="h-96 animate-pulse rounded-2xl border border-white/10 bg-[#11131c]" />
+      <div className="mx-auto max-w-6xl p-8">
+        <div className="h-96 animate-pulse rounded-2xl glass-panel" />
       </div>
     );
   }
@@ -102,34 +132,31 @@ export default function FinalBriefPage() {
   if (authError || !project) {
     return (
       <div className="mx-auto max-w-xl px-4 py-20 text-center">
-        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-red-500/15 text-red-400">
-          <ShieldAlert className="h-7 w-7" />
-        </div>
-        <h1 className="mt-4 text-xl font-bold text-white">
-          Brief Access Restricted
-        </h1>
-        <p className="mt-2 text-sm text-slate-400">{authError}</p>
-        <div className="mt-6 flex justify-center gap-3">
-          <Link
-            href="/dashboard"
-            className="rounded-xl bg-indigo-600 px-5 py-2.5 text-xs font-semibold text-white"
-          >
-            Back to Dashboard
-          </Link>
+        <div className="glass-panel rounded-3xl p-8">
+          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-rose-500/15 text-rose-500">
+            <ShieldAlert className="h-7 w-7" />
+          </div>
+          <h1 className="mt-4 text-xl font-bold">Brief Access Restricted</h1>
+          <p className="mt-2 text-sm text-slate-500">{authError}</p>
+          <div className="mt-6 flex justify-center gap-3">
+            <Link href="/dashboard" className="btn-apple-primary text-xs">
+              Back to Dashboard
+            </Link>
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6">
+    <div className="mx-auto max-w-[1600px] px-4 py-6 sm:px-6">
       <div className="mb-4 flex items-center justify-between no-print">
         <Link
           href={`/projects/${project.id}`}
-          className="inline-flex items-center gap-1.5 text-xs font-medium text-indigo-400 hover:underline"
+          className="btn-glass-secondary"
         >
           <ArrowLeft className="h-3.5 w-3.5" />
-          <span>Back to 10-Step Project Workspace</span>
+          <span>Back to 3-Column Project Workspace</span>
         </Link>
       </div>
 

@@ -406,3 +406,4 @@ export function calculateJudgeScore(project: Partial<Project>): JudgeScoreSnapsh
     confidenceWarning: warnings.length > 0 ? warnings.join(" ") : null,
   };
 }
+

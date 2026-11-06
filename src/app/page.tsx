@@ -14,7 +14,6 @@ import {
   Search,
   Sparkles,
   Layers,
-  CalendarClock,
   Award,
   BookOpen,
 } from "lucide-react";
@@ -86,31 +85,30 @@ export default function LandingPage() {
   const { t, lang } = useApp();
 
   return (
-    <div className="min-h-screen bg-[#090a0f] text-slate-100">
+    <div className="min-h-screen">
       {/* HERO SECTION */}
-      <section className="relative overflow-hidden border-b border-white/10 pt-16 pb-24">
-        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-indigo-900/25 via-[#090a0f] to-[#090a0f]" />
+      <section className="relative pt-16 pb-24">
         <div className="relative mx-auto max-w-6xl px-4 sm:px-6 text-center">
-          <div className="inline-flex items-center gap-2 rounded-full border border-indigo-500/30 bg-indigo-500/10 px-3.5 py-1.5 text-xs font-medium text-indigo-300">
-            <Sparkles className="h-3.5 w-3.5 text-indigo-400" />
+          <div className="inline-flex items-center gap-2 rounded-full border border-indigo-500/30 bg-indigo-500/10 px-4 py-1.5 text-xs font-semibold text-indigo-600 dark:text-indigo-300 backdrop-blur-md">
+            <Sparkles className="h-3.5 w-3.5 text-indigo-500" />
             <span>{t.hero.badge}</span>
           </div>
 
-          <h1 className="mx-auto mt-6 max-w-4xl text-4xl font-extrabold tracking-tight text-white sm:text-6xl leading-[1.1]">
+          <h1 className="mx-auto mt-6 max-w-4xl text-4xl font-extrabold tracking-tight sm:text-6xl leading-[1.1]">
             From Hackathon Theme to{" "}
-            <span className="bg-gradient-to-r from-indigo-400 via-violet-400 to-indigo-300 bg-clip-text text-transparent">
+            <span className="bg-gradient-to-r from-indigo-500 via-violet-500 to-cyan-500 bg-clip-text text-transparent">
               Winning Project Strategy.
             </span>
           </h1>
 
-          <p className="mx-auto mt-6 max-w-2xl text-base sm:text-lg text-slate-300 leading-relaxed">
+          <p className="mx-auto mt-6 max-w-2xl text-base sm:text-lg text-slate-600 dark:text-slate-300 leading-relaxed">
             Validate problems, design solutions, align with judges, and generate
             an execution-ready project brief with AI.
           </p>
 
           {/* Core Product Promise Banner */}
-          <div className="mx-auto mt-6 max-w-2xl rounded-xl border border-white/10 bg-[#11131c]/90 px-5 py-3 text-xs sm:text-sm text-slate-300">
-            <span className="font-semibold text-indigo-400 uppercase tracking-wider mr-2">
+          <div className="mx-auto mt-6 max-w-2xl rounded-2xl px-5 py-3.5 text-xs sm:text-sm glass-panel">
+            <span className="font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-wider mr-2">
               {t.hero.promiseLabel}:
             </span>
             &ldquo;{t.hero.promiseText}&rdquo;
@@ -118,24 +116,21 @@ export default function LandingPage() {
 
           {/* Primary & Secondary CTAs */}
           <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
-            <Link
-              href="/dashboard"
-              className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-6 py-3.5 text-sm font-semibold text-white shadow-lg shadow-indigo-600/30 transition hover:bg-indigo-500"
-            >
+            <Link href="/dashboard" className="btn-apple-primary text-sm px-7 py-3.5">
               <span>Start Building Your Brief</span>
               <ArrowRight className="h-4 w-4" />
             </Link>
             <a
               href="#features"
-              className="inline-flex items-center gap-2 rounded-xl border border-white/15 bg-[#11131c] px-6 py-3.5 text-sm font-semibold text-slate-200 transition hover:border-indigo-500/40 hover:bg-white/5"
+              className="btn-glass-secondary text-sm px-6 py-3.5"
             >
               <span>Explore Features</span>
             </a>
           </div>
 
           {/* Target Competitions Bar */}
-          <div className="mt-14 pt-8 border-t border-white/10">
-            <p className="text-xs font-medium uppercase tracking-widest text-slate-500">
+          <div className="mt-14 pt-8 border-t border-slate-200/70 dark:border-white/10">
+            <p className="text-xs font-bold uppercase tracking-widest text-slate-500">
               {lang === "id"
                 ? "Dirancang untuk Tim Kompetisi & Inovasi"
                 : "Engineered for Teams Competing In"}
@@ -144,7 +139,7 @@ export default function LandingPage() {
               {COMPETITIONS.map((comp) => (
                 <span
                   key={comp}
-                  className="rounded-lg border border-white/10 bg-[#11131c] px-3 py-1.5 text-xs font-medium text-slate-300"
+                  className="glass-card rounded-xl px-3.5 py-1.5 text-xs font-semibold"
                 >
                   {comp}
                 </span>
@@ -155,16 +150,16 @@ export default function LandingPage() {
       </section>
 
       {/* PRODUCT VALUE PROPOSITION (6-IN-1 AI STRATEGIST ROLES) */}
-      <section className="border-b border-white/10 py-20 bg-[#0c0e16]">
+      <section className="py-20">
         <div className="mx-auto max-w-6xl px-4 sm:px-6">
           <div className="text-center max-w-3xl mx-auto">
-            <span className="text-xs font-semibold uppercase tracking-widest text-indigo-400">
+            <span className="text-xs font-bold uppercase tracking-widest text-indigo-600 dark:text-indigo-400">
               Not a Generic Chatbot
             </span>
-            <h2 className="mt-2 text-2xl sm:text-3xl font-bold text-white">
+            <h2 className="mt-2 text-2xl sm:text-3xl font-extrabold">
               6 Elite Advisory Roles Unified in One Planning Workspace
             </h2>
-            <p className="mt-3 text-sm text-slate-400">
+            <p className="mt-3 text-sm text-slate-600 dark:text-slate-400">
               Hackathon Brief Generator AI challenges weak assumptions, validates
               evidence with real citations, and aligns every product decision
               with your competition&apos;s judging rubric.
@@ -208,15 +203,13 @@ export default function LandingPage() {
               return (
                 <div
                   key={item.role}
-                  className="rounded-xl border border-white/10 bg-[#11131c] p-6 transition hover:border-indigo-500/40"
+                  className="glass-panel rounded-2xl p-6 transition hover:scale-[1.01]"
                 >
-                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-indigo-500/15 text-indigo-400">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-500/15 text-indigo-600 dark:text-indigo-400">
                     <Icon className="h-5 w-5" />
                   </div>
-                  <h3 className="mt-4 text-base font-semibold text-white">
-                    {item.role}
-                  </h3>
-                  <p className="mt-2 text-xs leading-relaxed text-slate-400">
+                  <h3 className="mt-4 text-base font-bold">{item.role}</h3>
+                  <p className="mt-2 text-xs leading-relaxed text-slate-600 dark:text-slate-400">
                     {item.desc}
                   </p>
                 </div>
@@ -227,18 +220,18 @@ export default function LandingPage() {
       </section>
 
       {/* HOW IT WORKS (10-STEP WORKFLOW) */}
-      <section id="how-it-works" className="border-b border-white/10 py-20">
+      <section id="how-it-works" className="py-20">
         <div className="mx-auto max-w-6xl px-4 sm:px-6">
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
             <div>
-              <span className="text-xs font-semibold uppercase tracking-widest text-indigo-400">
+              <span className="text-xs font-bold uppercase tracking-widest text-indigo-600 dark:text-indigo-400">
                 Structured Methodology
               </span>
-              <h2 className="mt-2 text-2xl sm:text-3xl font-bold text-white">
+              <h2 className="mt-2 text-2xl sm:text-3xl font-extrabold">
                 How It Works: The 10-Step Winning Workflow
               </h2>
             </div>
-            <p className="max-w-md text-xs sm:text-sm text-slate-400">
+            <p className="max-w-md text-xs sm:text-sm text-slate-600 dark:text-slate-400">
               Navigate forward and backward freely with persistent autosave and
               live Judge Readiness scoring at every stage.
             </p>
@@ -248,16 +241,14 @@ export default function LandingPage() {
             {TEN_STEPS.map((step) => (
               <div
                 key={step.num}
-                className="flex flex-col justify-between rounded-xl border border-white/10 bg-[#11131c] p-5 hover:border-indigo-500/40 transition"
+                className="glass-card flex flex-col justify-between rounded-2xl p-5"
               >
                 <div>
-                  <span className="inline-block rounded bg-indigo-500/15 px-2 py-0.5 font-mono text-xs font-bold text-indigo-400">
+                  <span className="inline-block rounded-lg bg-indigo-500/15 px-2.5 py-0.5 font-mono text-xs font-bold text-indigo-600 dark:text-indigo-400">
                     STEP {step.num}
                   </span>
-                  <h3 className="mt-3 text-sm font-semibold text-white">
-                    {step.title}
-                  </h3>
-                  <p className="mt-2 text-xs leading-relaxed text-slate-400">
+                  <h3 className="mt-3 text-sm font-bold">{step.title}</h3>
+                  <p className="mt-2 text-xs leading-relaxed text-slate-600 dark:text-slate-400">
                     {step.desc}
                   </p>
                 </div>
@@ -268,26 +259,26 @@ export default function LandingPage() {
       </section>
 
       {/* KEY FEATURES */}
-      <section id="features" className="border-b border-white/10 py-20 bg-[#0c0e16]">
+      <section id="features" className="py-20">
         <div className="mx-auto max-w-6xl px-4 sm:px-6">
           <div className="text-center max-w-3xl mx-auto">
-            <span className="text-xs font-semibold uppercase tracking-widest text-indigo-400">
+            <span className="text-xs font-bold uppercase tracking-widest text-indigo-600 dark:text-indigo-400">
               Key Capabilities
             </span>
-            <h2 className="mt-2 text-2xl sm:text-3xl font-bold text-white">
+            <h2 className="mt-2 text-2xl sm:text-3xl font-extrabold">
               Everything Required to Win Technical & Product Hackathons
             </h2>
           </div>
 
           <div className="mt-12 grid gap-6 md:grid-cols-2">
-            <div className="rounded-xl border border-white/10 bg-[#11131c] p-6">
+            <div className="glass-panel rounded-2xl p-6">
               <div className="flex items-center gap-3">
-                <ShieldCheck className="h-6 w-6 text-emerald-400" />
-                <h3 className="text-lg font-semibold text-white">
+                <ShieldCheck className="h-6 w-6 text-emerald-500" />
+                <h3 className="text-lg font-bold">
                   Real Evidence Validation Engine (Zero Hallucinations)
                 </h3>
               </div>
-              <p className="mt-3 text-sm text-slate-400 leading-relaxed">
+              <p className="mt-3 text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
                 Connects directly to OpenAlex, Crossref, and Wikipedia research
                 registries to pull verifiable academic papers, publication dates,
                 organizations, and clickable source URLs—clearly distinguishing
@@ -295,45 +286,43 @@ export default function LandingPage() {
               </p>
             </div>
 
-            <div className="rounded-xl border border-white/10 bg-[#11131c] p-6">
+            <div className="glass-panel rounded-2xl p-6">
               <div className="flex items-center gap-3">
-                <Scale className="h-6 w-6 text-indigo-400" />
-                <h3 className="text-lg font-semibold text-white">
-                  Persistent Sticky Judge Score Engine
+                <Scale className="h-6 w-6 text-indigo-500" />
+                <h3 className="text-lg font-bold">
+                  Apple Fitness-Style Sticky Judge Score Engine
                 </h3>
               </div>
-              <p className="mt-3 text-sm text-slate-400 leading-relaxed">
+              <p className="mt-3 text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
                 Calculates your real-time weighted{" "}
-                <strong className="text-slate-200">
-                  AI Estimated Competition Readiness Score
-                </strong>{" "}
-                across Innovation, Impact, Feasibility, Technical Excellence, and
+                <strong>AI Estimated Competition Readiness Score</strong> across
+                Innovation, Impact, Feasibility, Technical Excellence, and
                 Presentation—pinpointing your weakest category and how to fix it.
               </p>
             </div>
 
-            <div className="rounded-xl border border-white/10 bg-[#11131c] p-6">
+            <div className="glass-panel rounded-2xl p-6">
               <div className="flex items-center gap-3">
-                <Layers className="h-6 w-6 text-violet-400" />
-                <h3 className="text-lg font-semibold text-white">
+                <Layers className="h-6 w-6 text-violet-500" />
+                <h3 className="text-lg font-bold">
                   Mermaid User Flows & System Architecture Diagrams
                 </h3>
               </div>
-              <p className="mt-3 text-sm text-slate-400 leading-relaxed">
-                Automatically generates visual Mermaid flowcharts for both user
-                experience journeys (Step 6) and full-stack technical
-                architectures (Step 7) ready for your pitch deck and PDF brief.
+              <p className="mt-3 text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
+                Automatically generates visual Mermaid flowcharts with
+                interactive zoom and code toggles for both UX journeys (Step 6)
+                and full-stack technical architectures (Step 7).
               </p>
             </div>
 
-            <div className="rounded-xl border border-white/10 bg-[#11131c] p-6">
+            <div className="glass-panel rounded-2xl p-6">
               <div className="flex items-center gap-3">
-                <FileText className="h-6 w-6 text-amber-400" />
-                <h3 className="text-lg font-semibold text-white">
-                  Editorial A4 PDF Export (13 Sections + Appendix)
+                <FileText className="h-6 w-6 text-amber-500" />
+                <h3 className="text-lg font-bold">
+                  Split-Screen Editorial A4 PDF Export (13 Sections + Appendix)
                 </h3>
               </div>
-              <p className="mt-3 text-sm text-slate-400 leading-relaxed">
+              <p className="mt-3 text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
                 Compiles your Cover Page, Table of Contents, 13 strategic
                 sections, and cited Research Appendix into a print-ready A4 PDF
                 document with section-by-section editing and completeness checks.
@@ -344,42 +333,45 @@ export default function LandingPage() {
       </section>
 
       {/* SAMPLE GENERATED PROJECT BRIEF */}
-      <section id="sample-brief" className="border-b border-white/10 py-20">
+      <section id="sample-brief" className="py-20">
         <div className="mx-auto max-w-6xl px-4 sm:px-6">
-          <div className="rounded-2xl border border-indigo-500/30 bg-gradient-to-b from-[#131624] to-[#0f111a] p-6 sm:p-10 shadow-2xl">
-            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 border-b border-white/10 pb-6">
+          <div className="glass-panel rounded-3xl p-6 sm:p-10">
+            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 border-b border-slate-200/70 dark:border-white/10 pb-6">
               <div>
-                <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/15 px-3 py-1 text-xs font-semibold text-emerald-300 border border-emerald-500/30">
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/15 px-3 py-1 text-xs font-bold text-emerald-700 dark:text-emerald-300 border border-emerald-500/30">
                   <CheckCircle2 className="h-3.5 w-3.5" />
                   Sample Generated Project Brief Included
                 </span>
-                <h2 className="mt-3 text-2xl font-bold text-white">
+                <h2 className="mt-3 text-2xl font-extrabold">
                   MedTriage Rural AI — Multimodal Clinical Triage Copilot
                 </h2>
-                <p className="mt-1 text-xs sm:text-sm text-slate-400">
+                <p className="mt-1 text-xs sm:text-sm text-slate-600 dark:text-slate-400">
                   Competition: Gemini API Developer Competition • Theme: AI for
                   Social Impact & Accessible Healthcare
                 </p>
               </div>
               <div className="flex flex-wrap items-center gap-3">
-                <div className="rounded-xl border border-indigo-500/30 bg-indigo-500/10 px-4 py-2 text-right">
-                  <div className="text-[10px] uppercase tracking-wider text-indigo-300">
-                    AI Estimated Competition Readiness Score
+                <div className="glass-card rounded-2xl px-4 py-2 text-right">
+                  <div className="text-[10px] font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-300">
+                    AI Estimated Readiness Score
                   </div>
-                  <div className="text-xl font-extrabold text-white">
-                    92.4 <span className="text-xs font-normal text-slate-400">/ 100</span>
+                  <div className="text-xl font-extrabold">
+                    92.4{" "}
+                    <span className="text-xs font-normal text-slate-500">
+                      / 100
+                    </span>
                   </div>
                 </div>
                 <Link
                   href="/projects/proj-sample-medtriage"
-                  className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2.5 text-xs font-semibold text-white hover:bg-indigo-500"
+                  className="btn-apple-primary text-xs"
                 >
-                  <span>Inspect Live Workspace</span>
+                  <span>Inspect Live 3-Column Workspace</span>
                   <ArrowRight className="h-3.5 w-3.5" />
                 </Link>
                 <Link
                   href="/projects/proj-sample-medtriage/brief"
-                  className="inline-flex items-center gap-2 rounded-xl border border-white/15 bg-white/5 px-4 py-2.5 text-xs font-semibold text-slate-200 hover:bg-white/10"
+                  className="btn-glass-secondary"
                 >
                   <FileText className="h-3.5 w-3.5" />
                   <span>Preview Sample A4 PDF Brief</span>
@@ -388,11 +380,11 @@ export default function LandingPage() {
             </div>
 
             <div className="mt-6 grid gap-6 md:grid-cols-3 text-xs">
-              <div className="rounded-xl border border-white/10 bg-[#090a0f]/70 p-4">
-                <div className="font-semibold text-indigo-400 uppercase tracking-wider">
+              <div className="glass-card rounded-2xl p-4">
+                <div className="font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-wider">
                   Structured Problem Statement
                 </div>
-                <p className="mt-2 text-slate-300 leading-relaxed">
+                <p className="mt-2 leading-relaxed text-slate-600 dark:text-slate-300">
                   &ldquo;Frontline triage nurses at rural primary care clinics
                   experience delays and documentation overload when assessing
                   complex patient presentations because clinical guidelines are
@@ -401,11 +393,11 @@ export default function LandingPage() {
                   per referral.&rdquo;
                 </p>
               </div>
-              <div className="rounded-xl border border-white/10 bg-[#090a0f]/70 p-4">
-                <div className="font-semibold text-emerald-400 uppercase tracking-wider">
+              <div className="glass-card rounded-2xl p-4">
+                <div className="font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">
                   Verified Evidence Citations
                 </div>
-                <ul className="mt-2 space-y-2 text-slate-300">
+                <ul className="mt-2 space-y-2 text-slate-600 dark:text-slate-300">
                   <li>
                     • <strong>WHO (2023):</strong> 10M projected health worker
                     deficit disproportionately impacting rural primary care.
@@ -420,11 +412,11 @@ export default function LandingPage() {
                   </li>
                 </ul>
               </div>
-              <div className="rounded-xl border border-white/10 bg-[#090a0f]/70 p-4">
-                <div className="font-semibold text-violet-400 uppercase tracking-wider">
+              <div className="glass-card rounded-2xl p-4">
+                <div className="font-bold text-violet-600 dark:text-violet-400 uppercase tracking-wider">
                   Recommended Architecture & MVP
                 </div>
-                <p className="mt-2 text-slate-300 leading-relaxed">
+                <p className="mt-2 leading-relaxed text-slate-600 dark:text-slate-300">
                   Next.js 15 PWA + Gemini Multimodal (Voice + Vital Chart Photo)
                   + PostgreSQL SOP Grounding + One-Click A4 SBAR Referral Export
                   with mandatory nurse sign-off.
@@ -438,19 +430,16 @@ export default function LandingPage() {
       {/* CALL TO ACTION */}
       <section className="py-20 text-center">
         <div className="mx-auto max-w-3xl px-4 sm:px-6">
-          <h2 className="text-3xl font-bold text-white">
+          <h2 className="text-3xl font-extrabold">
             Ready to Transform Your Hackathon Idea Into a Winning Brief?
           </h2>
-          <p className="mt-3 text-sm sm:text-base text-slate-400">
+          <p className="mt-3 text-sm sm:text-base text-slate-600 dark:text-slate-400">
             Launch the 10-step AI Product Strategist workspace, validate your
             problem with real citations, and export your A4 project brief in
             under 20 minutes.
           </p>
           <div className="mt-8 flex justify-center gap-4">
-            <Link
-              href="/dashboard"
-              className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-7 py-3.5 text-sm font-semibold text-white shadow-lg shadow-indigo-600/30 hover:bg-indigo-500"
-            >
+            <Link href="/dashboard" className="btn-apple-primary text-sm px-7 py-3.5">
               <span>Start Building Your Brief</span>
               <ArrowRight className="h-4 w-4" />
             </Link>
@@ -459,31 +448,31 @@ export default function LandingPage() {
       </section>
 
       {/* FOOTER */}
-      <footer className="border-t border-white/10 bg-[#06070b] py-10 text-xs text-slate-500">
+      <footer className="glass-panel border-b-0 border-x-0 rounded-none py-8 text-xs text-slate-500">
         <div className="mx-auto flex max-w-6xl flex-col sm:flex-row items-center justify-between gap-4 px-4 sm:px-6">
           <div>
-            <span className="font-semibold text-slate-300">
+            <span className="font-bold text-slate-800 dark:text-slate-200">
               Hackathon Brief Generator AI (Ideation-Maker V1.0)
             </span>{" "}
             — Product Owner: Christian Immanuel Valerio
           </div>
-          <div className="flex items-center gap-6">
-            <Link href="/dashboard" className="hover:text-slate-300">
+          <div className="flex items-center gap-6 font-medium">
+            <Link href="/dashboard" className="hover:text-indigo-500">
               Dashboard
             </Link>
             <Link
               href="/projects/proj-sample-medtriage"
-              className="hover:text-slate-300"
+              className="hover:text-indigo-500"
             >
               Sample Workspace
             </Link>
             <Link
               href="/projects/proj-sample-medtriage/brief"
-              className="hover:text-slate-300"
+              className="hover:text-indigo-500"
             >
               Sample PDF Brief
             </Link>
-            <Link href="/auth" className="hover:text-slate-300">
+            <Link href="/auth" className="hover:text-indigo-500">
               Account & Authorization
             </Link>
           </div>

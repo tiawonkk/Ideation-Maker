@@ -63,3 +63,4 @@ export function registerUser(name: string, email: string, passwordHash = "demo12
   writeDb(db);
   return newUser;
 }
+

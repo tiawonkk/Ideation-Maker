@@ -34,3 +34,4 @@ Never fabricate data, research, statistics, market size, customer interviews, or
 Clearly distinguish facts, assumptions, estimates, and AI-generated recommendations.
 If information is insufficient, ask focused follow-up questions instead of making unsupported assumptions.
 Your output must be structured, professional, concise, and suitable for inclusion in a formal hackathon project brief.`;
+

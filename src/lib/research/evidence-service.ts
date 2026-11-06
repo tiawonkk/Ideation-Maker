@@ -262,3 +262,4 @@ export function buildProblemValidationReport(
       "CRITICAL METHODOLOGICAL DISTINCTION: The citations in this report constitute Secondary Desk Research (academic literature & institutional data). They do NOT replace Primary Customer Validation (direct user interviews, shadow sessions, or prototype usability testing).",
   };
 }
+

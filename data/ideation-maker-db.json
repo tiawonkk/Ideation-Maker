@@ -21,6 +21,312 @@
   ],
   "projects": [
     {
+      "id": "proj-1793900288444-gj4lr",
+      "userId": "user-owner-1",
+      "title": "GEMASTIK (Divisi Piranti Cerdas / Kota Cerdas) Strategy Brief",
+      "tagline": "Transforming competition themes into validated, execution-ready project briefs.",
+      "teamName": "Alpha Innovation Team",
+      "preparedBy": "Christian Immanuel Valerio",
+      "status": "IN_PROGRESS",
+      "currentStep": 1,
+      "completionPercentage": 20,
+      "lastEditedAt": "2026-11-05T17:38:08.444Z",
+      "createdAt": "2026-11-05T17:38:08.444Z",
+      "step1_competition": {
+        "name": "GEMASTIK (Divisi Piranti Cerdas / Kota Cerdas)",
+        "theme": "Inovasi Digital untuk Ketahanan Nasional & Pelayanan Publik",
+        "description": "Kembangkan solusi teknologi informasi tervalidasi untuk meningkatkan efisiensi layanan publik dan kesejahteraan masyarakat di Indonesia.",
+        "domain": "Smart City, Public Service & GovTech Indonesia",
+        "targetTechnology": "Next.js, IoT/AI Pipeline, PostgreSQL, Cloud Analytics",
+        "additionalContext": ""
+      },
+      "step2_judgeCriteria": {
+        "criteria": [
+          {
+            "id": "crit-innovation",
+            "name": "Innovation",
+            "weight": 30,
+            "description": "Novelty of approach, creative use of target technology, and differentiation from existing tools."
+          },
+          {
+            "id": "crit-impact",
+            "name": "Impact",
+            "weight": 30,
+            "description": "Measurable real-world value, problem severity, market/social scale, and evidence validation."
+          },
+          {
+            "id": "crit-feasibility",
+            "name": "Feasibility",
+            "weight": 15,
+            "description": "Realistic MVP scope, achievable timeline within hackathon deadline, and operational viability."
+          },
+          {
+            "id": "crit-technical",
+            "name": "Technical Excellence",
+            "weight": 15,
+            "description": "Sound system architecture, appropriate tech stack, AI integration depth, and risk mitigation."
+          },
+          {
+            "id": "crit-presentation",
+            "name": "Presentation",
+            "weight": 10,
+            "description": "Clarity of problem statement, completeness of competition deliverables, and pitch readiness."
+          }
+        ]
+      },
+      "step3_problemDiscovery": {
+        "whoExperiences": "",
+        "biggestDifficulty": "",
+        "frequency": "",
+        "impact": "",
+        "currentWorkarounds": "",
+        "whyInsufficient": ""
+      },
+      "step4_evidenceValidation": {
+        "searchQuery": "",
+        "evidenceItems": []
+      },
+      "step5_solutionGenerator": {
+        "alternatives": [],
+        "comparisonSummary": "",
+        "recommendationReasoning": "",
+        "selectedSolutionId": null
+      },
+      "step6_productDesign": {
+        "productIdentity": {
+          "applicationName": "",
+          "tagline": "",
+          "productVision": "",
+          "productMission": ""
+        },
+        "valueProposition": {
+          "mainValueProposition": "",
+          "uniqueSellingProposition": "",
+          "competitiveDifferentiation": ""
+        },
+        "features": [],
+        "userExperience": {
+          "targetUserPersonaSummary": "",
+          "userJourneyStages": [],
+          "userFlowSteps": [],
+          "mainApplicationScreens": [],
+          "mermaidUserFlow": ""
+        }
+      },
+      "step7_technicalArchitecture": {
+        "systemArchitecture": {
+          "frontend": "",
+          "backend": "",
+          "database": "",
+          "cloudInfrastructure": "",
+          "authentication": "",
+          "storage": "",
+          "analytics": "",
+          "thirdPartyApis": "",
+          "aiIntegration": ""
+        },
+        "techStackTable": [],
+        "deliverables": {
+          "systemOverview": "",
+          "architectureExplanation": "",
+          "componentResponsibilities": [],
+          "databaseDesign": "",
+          "apiIntegrationPlan": "",
+          "aiIntegrationStrategy": "",
+          "securityConsiderations": "",
+          "deploymentStrategy": "",
+          "technicalRisks": []
+        },
+        "mermaidSystemDiagram": ""
+      },
+      "step8_developmentTimeline": {
+        "totalDuration": "48 Hours",
+        "teamSize": 4,
+        "teamRoles": [
+          "Product Manager",
+          "Frontend Developer",
+          "Backend / AI Engineer",
+          "UI/UX Designer"
+        ],
+        "developmentDeadline": "2026-11-12",
+        "currentProgress": "Ideation & Validation Stage",
+        "milestones": []
+      },
+      "step9_deliverables": {
+        "competitionSpecificNotes": "",
+        "items": [
+          {
+            "id": "deliv-1-q1wt",
+            "title": "Pitch Deck (Problem, Validation, Demo, Architecture, Roadmap)",
+            "category": "MANDATORY",
+            "responsibleRole": "Product Manager / Hustler",
+            "deadline": "H-12 Hours before submission",
+            "completed": false
+          },
+          {
+            "id": "deliv-2-sfp4",
+            "title": "Working Demo (Deployed Live URL & Fallback Local Build)",
+            "category": "MANDATORY",
+            "responsibleRole": "Full-Stack / Frontend Lead",
+            "deadline": "H-6 Hours before submission",
+            "completed": false
+          },
+          {
+            "id": "deliv-3-qmpj",
+            "title": "Source Code (Clean, Modular, Documented)",
+            "category": "MANDATORY",
+            "responsibleRole": "Engineering Team",
+            "deadline": "H-4 Hours before submission",
+            "completed": false
+          },
+          {
+            "id": "deliv-4-7yxe",
+            "title": "GitHub Repository (Public/Judge Access + Setup README)",
+            "category": "MANDATORY",
+            "responsibleRole": "Software Architect",
+            "deadline": "H-4 Hours before submission",
+            "completed": false
+          },
+          {
+            "id": "deliv-5-kshb",
+            "title": "System Architecture Diagram (Mermaid / High-Res Export)",
+            "category": "MANDATORY",
+            "responsibleRole": "Software Architect",
+            "deadline": "H-18 Hours before submission",
+            "completed": false
+          },
+          {
+            "id": "deliv-6-c0hn",
+            "title": "Problem Validation Report (With Verifiable Citations)",
+            "category": "MANDATORY",
+            "responsibleRole": "Product Manager / Researcher",
+            "deadline": "Day 1 Milestone",
+            "completed": false
+          },
+          {
+            "id": "deliv-7-eev5",
+            "title": "Business Model Canvas / Sustainability Plan",
+            "category": "RECOMMENDED",
+            "responsibleRole": "Business Analyst",
+            "deadline": "H-24 Hours before submission",
+            "completed": false
+          },
+          {
+            "id": "deliv-8-9ykg",
+            "title": "Product Roadmap (MVP vs Post-Hackathon Scale)",
+            "category": "RECOMMENDED",
+            "responsibleRole": "Product Manager",
+            "deadline": "H-16 Hours before submission",
+            "completed": false
+          },
+          {
+            "id": "deliv-9-glk2",
+            "title": "3-Minute Demo Video (Narrated Walkthrough)",
+            "category": "RECOMMENDED",
+            "responsibleRole": "Product Manager / Designer",
+            "deadline": "H-3 Hours before submission",
+            "completed": false
+          },
+          {
+            "id": "deliv-10-eusx",
+            "title": "User Journey & Flow Diagram",
+            "category": "RECOMMENDED",
+            "responsibleRole": "UI/UX Designer",
+            "deadline": "Day 1 Milestone",
+            "completed": false
+          },
+          {
+            "id": "deliv-11-uirh",
+            "title": "Interactive Wireframes / High-Fidelity UI",
+            "category": "RECOMMENDED",
+            "responsibleRole": "UI/UX Designer",
+            "deadline": "Day 1 Milestone",
+            "completed": false
+          },
+          {
+            "id": "deliv-12-uyry",
+            "title": "Technical & API Documentation",
+            "category": "RECOMMENDED",
+            "responsibleRole": "Backend / AI Engineer",
+            "deadline": "H-6 Hours before submission",
+            "completed": false
+          },
+          {
+            "id": "deliv-13-fwia",
+            "title": "Testing & QA Verification Log",
+            "category": "RECOMMENDED",
+            "responsibleRole": "QA / Full-Stack Engineer",
+            "deadline": "H-4 Hours before submission",
+            "completed": false
+          }
+        ]
+      },
+      "judgeScore": {
+        "id": "score-1793900288445",
+        "timestamp": "2026-11-05T17:38:08.445Z",
+        "overallScore": 23,
+        "categories": [
+          {
+            "category": "Innovation",
+            "weight": 30,
+            "rawScore": 20,
+            "weightedScore": 6,
+            "reasoning": "Insufficient innovation data. Complete Theme Analysis (Step 1) and Solution Selection (Step 5).",
+            "dataCompleteness": "Insufficient"
+          },
+          {
+            "category": "Impact",
+            "weight": 30,
+            "rawScore": 15,
+            "weightedScore": 4.5,
+            "reasoning": "No validated problem statement or research citations found yet.",
+            "dataCompleteness": "Insufficient"
+          },
+          {
+            "category": "Feasibility",
+            "weight": 15,
+            "rawScore": 20,
+            "weightedScore": 3,
+            "reasoning": "MVP scope (Step 6) and Development Timeline (Step 8) have not been defined yet.",
+            "dataCompleteness": "Insufficient"
+          },
+          {
+            "category": "Technical Excellence",
+            "weight": 15,
+            "rawScore": 30,
+            "weightedScore": 4.5,
+            "reasoning": "Target technology specified (Next.js, IoT/AI Pipeline, PostgreSQL, Cloud Analytics).",
+            "dataCompleteness": "Insufficient"
+          },
+          {
+            "category": "Presentation",
+            "weight": 10,
+            "rawScore": 50,
+            "weightedScore": 5,
+            "reasoning": "Deliverable checklist active (0/13 items marked ready in Step 9).",
+            "dataCompleteness": "Partial"
+          }
+        ],
+        "weakestCategory": "Impact",
+        "improvementSuggestions": [
+          "Run Step 1 Theme Analyzer to align with competition innovation angles.",
+          "Generate and select a differentiated solution concept in Step 5.",
+          "Complete Step 6 Product Design to sharpen your Unique Selling Proposition.",
+          "Define a measurable Problem Statement with root causes in Step 3.",
+          "Run Step 4 Evidence Validation Engine to back your problem claim with real citations."
+        ],
+        "confidenceWarning": "4 judging category(s) have insufficient project data. Complete all 10 workflow steps for high-confidence evaluation. Missing empirical research citations in Step 4 (Evidence Validation Engine)."
+      },
+      "scoreHistory": [
+        {
+          "timestamp": "2026-11-05T17:38:08.444Z",
+          "overallScore": 23,
+          "trigger": "Project Initialized"
+        }
+      ],
+      "aiHistory": []
+    },
+    {
       "id": "proj-sample-medtriage",
       "userId": "user-owner-1",
       "title": "MedTriage Rural AI — Multimodal Clinical Triage Copilot",

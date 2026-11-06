@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState, useCallback } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import Link from "next/link";
 import { useApp } from "@/components/layout/AppProvider";
 import { Project } from "@/types/project";
@@ -16,9 +16,10 @@ import {
   Save,
   ArrowLeft,
   ArrowRight,
-  LayoutGrid,
   ShieldAlert,
   Sparkles,
+  Wand2,
+  Info,
 } from "lucide-react";
 
 const SIDEBAR_MODULES = [
@@ -26,7 +27,7 @@ const SIDEBAR_MODULES = [
   { step: 1, label: "1. Theme Analyzer" },
   { step: 2, label: "2. Judge Criteria" },
   { step: 3, label: "3. Problem Discovery" },
-  { step: 4, label: "4. Problem Validation" },
+  { step: 4, label: "4. Evidence Validation" },
   { step: 5, label: "5. Solution Generator" },
   { step: 6, label: "6. Product Design" },
   { step: 7, label: "7. Technical Architecture" },
@@ -37,8 +38,7 @@ const SIDEBAR_MODULES = [
 
 export default function ProjectWorkspacePage() {
   const params = useParams<{ id: string }>();
-  const router = useRouter();
-  const { showToast, aiConfig } = useApp();
+  const { showToast, aiConfig, setWorkspaceHeader } = useApp();
 
   const [project, setProject] = useState<Project | null>(null);
   const [loading, setLoading] = useState(true);
@@ -46,6 +46,7 @@ export default function ProjectWorkspacePage() {
   const [activeStep, setActiveStep] = useState<number>(1);
   const [saving, setSaving] = useState(false);
   const [generatingStep, setGeneratingStep] = useState<number | null>(null);
+  const [mobileJudgeOpen, setMobileJudgeOpen] = useState(false);
 
   const fetchProject = useCallback(async () => {
     setLoading(true);
@@ -68,7 +69,10 @@ export default function ProjectWorkspacePage() {
 
   useEffect(() => {
     fetchProject();
-  }, [fetchProject]);
+    return () => {
+      setWorkspaceHeader(null);
+    };
+  }, [fetchProject, setWorkspaceHeader]);
 
   const saveProjectUpdates = useCallback(
     async (
@@ -92,7 +96,7 @@ export default function ProjectWorkspacePage() {
         if (res.ok && data.project) {
           setProject(data.project);
           if (!silent) {
-            showToast("Progress saved & Judge Score recalculated", "success");
+            showToast("Draft saved & Judge Score updated", "success");
           }
           return data.project;
         } else {
@@ -106,17 +110,40 @@ export default function ProjectWorkspacePage() {
     [project, activeStep, showToast]
   );
 
+  // Sync Workspace Topbar state
+  useEffect(() => {
+    if (!project) return;
+    const timeStr = new Date(project.lastEditedAt).toLocaleTimeString([], {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+    setWorkspaceHeader({
+      projectId: project.id,
+      projectTitle: project.title,
+      saving,
+      lastSavedAt: timeStr,
+      overallScore: project.judgeScore?.overallScore ?? 0,
+      onUpdateTitle: (newTitle: string) => {
+        saveProjectUpdates(
+          { ...project, title: newTitle },
+          "Project Renamed"
+        );
+      },
+      onOpenMobileJudgeDrawer: () => setMobileJudgeOpen(true),
+    });
+  }, [project, saving, setWorkspaceHeader, saveProjectUpdates]);
+
   const handleGenerateModule = async (
     stepNumber: number,
     customPayload?: Record<string, unknown>
   ) => {
     if (!project) return;
-    setGeneratingStep(stepNumber);
+    const targetStep = stepNumber > 0 ? stepNumber : 1;
+    setGeneratingStep(targetStep);
     try {
-      // First persist current local state
       const saved = await saveProjectUpdates(
         project,
-        `Pre-generation save (Step ${stepNumber})`,
+        `Pre-generation save (Step ${targetStep})`,
         true
       );
       const currentProj = saved || project;
@@ -126,7 +153,7 @@ export default function ProjectWorkspacePage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           projectId: currentProj.id,
-          stepNumber,
+          stepNumber: targetStep,
           aiConfig,
           customPayload,
         }),
@@ -137,7 +164,7 @@ export default function ProjectWorkspacePage() {
       } else if (data.project) {
         setProject(data.project);
         showToast(
-          `Step ${stepNumber} generated (${data.providerMode})`,
+          `Step ${targetStep} generated (${data.providerMode})`,
           "success"
         );
       }
@@ -146,10 +173,75 @@ export default function ProjectWorkspacePage() {
     }
   };
 
+  // Quick Fill Sample Data for fast testing
+  const handleQuickFillSampleData = async () => {
+    if (!project) return;
+    setSaving(true);
+    try {
+      const sampleFilled: Partial<Project> = {
+        title:
+          project.title.includes("Untitled") || project.title.includes("New")
+            ? "MedTriage Rural AI — Multimodal Triage Copilot"
+            : project.title,
+        tagline:
+          "60-Second Multimodal Clinical Triage & SBAR Referral Copilot for Rural Primary Care.",
+        step1_competition: {
+          ...project.step1_competition,
+          name:
+            project.step1_competition.name ||
+            "Gemini API Developer Competition",
+          theme:
+            project.step1_competition.theme ||
+            "AI for Social Impact & Accessible Healthcare",
+          domain:
+            project.step1_competition.domain ||
+            "Healthcare & Clinical Triage Informatics",
+          targetTechnology:
+            project.step1_competition.targetTechnology ||
+            "Google Gemini 2.5 Multimodal API, Next.js 15, TypeScript, PostgreSQL",
+          description:
+            "Build high-impact applications using multimodal generative AI to solve urgent community challenges in healthcare.",
+          additionalContext:
+            "Focus on underserved rural primary care clinics (Puskesmas) with limited specialist physicians.",
+        },
+        step3_problemDiscovery: {
+          ...project.step3_problemDiscovery,
+          whoExperiences:
+            "Frontline triage nurses at rural primary healthcare clinics (Puskesmas) in underserved regions.",
+          biggestDifficulty:
+            "Rapidly cross-referencing complex symptoms, vital signs, and 200-page clinical SOP guidelines during peak clinic hours while manually writing hospital referral summaries.",
+          frequency: "Daily — 30 to 60 patient intakes per clinic every morning.",
+          impact:
+            "15–25 minutes wasted per complex referral on manual documentation and delayed escalation of high-risk emergencies.",
+          currentWorkarounds:
+            "Static PDF guideline booklets, unstructured WhatsApp messages, and handwritten paper referral forms.",
+          whyInsufficient:
+            "Static PDFs cannot actively flag risk combinations from patient vitals, and unstructured chats omit critical clinical red flags.",
+        },
+      };
+
+      const saved = await saveProjectUpdates(
+        sampleFilled,
+        "Quick-Filled Sample Inputs",
+        true
+      );
+      if (saved) {
+        // Trigger AI generation for the current step if applicable
+        if (activeStep >= 1 && activeStep <= 10) {
+          await handleGenerateModule(activeStep);
+        } else {
+          showToast("Sample data populated across workspace!", "success");
+        }
+      }
+    } finally {
+      setSaving(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="mx-auto max-w-6xl p-8">
-        <div className="h-96 animate-pulse rounded-2xl border border-white/10 bg-[#11131c]" />
+        <div className="h-96 animate-pulse rounded-2xl glass-panel" />
       </div>
     );
   }
@@ -157,112 +249,198 @@ export default function ProjectWorkspacePage() {
   if (authError || !project) {
     return (
       <div className="mx-auto max-w-xl px-4 py-20 text-center">
-        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-red-500/15 text-red-400">
-          <ShieldAlert className="h-7 w-7" />
-        </div>
-        <h1 className="mt-4 text-xl font-bold text-white">
-          Workspace Access Restricted
-        </h1>
-        <p className="mt-2 text-sm text-slate-400">{authError}</p>
-        <div className="mt-6 flex justify-center gap-3">
-          <Link
-            href="/dashboard"
-            className="rounded-xl bg-indigo-600 px-5 py-2.5 text-xs font-semibold text-white hover:bg-indigo-500"
-          >
-            Back to Dashboard
-          </Link>
-          <Link
-            href="/auth"
-            className="rounded-xl border border-white/15 px-5 py-2.5 text-xs font-semibold text-slate-300 hover:bg-white/5"
-          >
-            Switch Account
-          </Link>
+        <div className="glass-panel rounded-3xl p-8">
+          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-rose-500/15 text-rose-500">
+            <ShieldAlert className="h-7 w-7" />
+          </div>
+          <h1 className="mt-4 text-xl font-bold">
+            Workspace Access Restricted
+          </h1>
+          <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
+            {authError}
+          </p>
+          <div className="mt-6 flex justify-center gap-3">
+            <Link href="/dashboard" className="btn-apple-primary text-xs">
+              Back to Dashboard
+            </Link>
+            <Link href="/auth" className="btn-glass-secondary">
+              Switch Account
+            </Link>
+          </div>
         </div>
       </div>
     );
   }
 
-  const isStepCompleted = (step: number): boolean => {
+  // 4-State Step Status Evaluator: Completed | Active | Draft | Not Started
+  const getStepState = (
+    step: number
+  ): "completed" | "draft" | "not_started" => {
     switch (step) {
       case 0:
-        return Boolean(project.title);
+        return project.title ? "completed" : "draft";
       case 1:
-        return Boolean(project.step1_competition?.analysis);
+        if (project.step1_competition?.analysis) return "completed";
+        if (project.step1_competition?.name || project.step1_competition?.theme)
+          return "draft";
+        return "not_started";
       case 2:
-        return Boolean(project.step2_judgeCriteria?.criteria?.length);
+        if (project.step2_judgeCriteria?.overallInterpretation)
+          return "completed";
+        if (project.step2_judgeCriteria?.criteria?.length) return "draft";
+        return "not_started";
       case 3:
-        return Boolean(project.step3_problemDiscovery?.analysis?.problemStatement);
+        if (project.step3_problemDiscovery?.analysis?.problemStatement)
+          return "completed";
+        if (project.step3_problemDiscovery?.whoExperiences) return "draft";
+        return "not_started";
       case 4:
-        return (project.step4_evidenceValidation?.evidenceItems?.length || 0) > 0;
+        if ((project.step4_evidenceValidation?.evidenceItems?.length || 0) >= 1)
+          return "completed";
+        if (project.step4_evidenceValidation?.searchQuery) return "draft";
+        return "not_started";
       case 5:
-        return Boolean(project.step5_solutionGenerator?.selectedSolutionId);
+        if (project.step5_solutionGenerator?.selectedSolutionId)
+          return "completed";
+        if ((project.step5_solutionGenerator?.alternatives?.length || 0) > 0)
+          return "draft";
+        return "not_started";
       case 6:
-        return (project.step6_productDesign?.features?.length || 0) > 0;
+        if ((project.step6_productDesign?.features?.length || 0) > 0)
+          return "completed";
+        if (project.step6_productDesign?.productIdentity?.applicationName)
+          return "draft";
+        return "not_started";
       case 7:
-        return Boolean(
-          project.step7_technicalArchitecture?.systemArchitecture?.frontend
-        );
+        if (
+          project.step7_technicalArchitecture?.systemArchitecture?.frontend &&
+          project.step7_technicalArchitecture?.mermaidSystemDiagram
+        )
+          return "completed";
+        if (project.step7_technicalArchitecture?.systemArchitecture?.frontend)
+          return "draft";
+        return "not_started";
       case 8:
-        return (project.step8_developmentTimeline?.milestones?.length || 0) > 0;
+        if ((project.step8_developmentTimeline?.milestones?.length || 0) > 0)
+          return "completed";
+        return "not_started";
       case 9:
-        return (project.step9_deliverables?.items?.length || 0) > 0;
+        if (
+          project.step9_deliverables?.items?.some((d) => d.completed)
+        )
+          return "completed";
+        if ((project.step9_deliverables?.items?.length || 0) > 0)
+          return "draft";
+        return "not_started";
       case 10:
-        return Boolean(
-          project.step10_finalBrief?.sections?.section1_executiveSummary
-        );
+        if (project.step10_finalBrief?.sections?.section1_executiveSummary)
+          return "completed";
+        return "not_started";
       default:
-        return false;
+        return "not_started";
     }
   };
 
   return (
-    <div className="flex min-h-[calc(100vh-4rem)] bg-[#090a0f]">
-      {/* LEFT SIDEBAR: 10-STEP NAVIGATION */}
-      <aside className="hidden lg:flex w-64 shrink-0 flex-col justify-between border-r border-white/10 bg-[#11131c] p-4 sticky top-16 h-[calc(100vh-4rem)] overflow-y-auto no-print">
+    <div className="flex h-[calc(100vh-4rem)] overflow-hidden">
+      {/* ==================================================================== */}
+      {/* COLUMN 1: LEFT SIDEBAR (w-72 shrink-0 h-full overflow-y-auto)        */}
+      {/* ==================================================================== */}
+      <aside className="hidden lg:flex w-72 shrink-0 h-full flex-col justify-between overflow-y-auto glass-panel border-r border-t-0 border-l-0 border-b-0 rounded-none p-4 pb-10 no-print">
         <div>
-          <div className="mb-4 border-b border-white/10 pb-3">
+          {/* Sidebar Header */}
+          <div className="mb-4 border-b border-slate-200/70 dark:border-white/10 pb-4 space-y-3">
             <Link
               href="/dashboard"
-              className="inline-flex items-center gap-1.5 text-xs text-slate-400 hover:text-white"
+              className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-600 hover:text-indigo-600 dark:text-slate-400 dark:hover:text-white transition"
             >
               <ArrowLeft className="h-3.5 w-3.5" />
-              <span>All Projects</span>
+              <span>Back to Dashboard</span>
             </Link>
-            <h2 className="mt-2 truncate text-sm font-bold text-white">
-              {project.title}
-            </h2>
-            <div className="mt-1 flex items-center justify-between text-[11px] text-slate-400">
-              <span>Progress: {project.completionPercentage}%</span>
-              <span className="text-emerald-400">
-                {saving ? "Saving..." : "Autosaved"}
-              </span>
+
+            {/* Overall Completion Progress Bar */}
+            <div>
+              <div className="flex items-center justify-between text-xs">
+                <span className="font-semibold text-slate-500 dark:text-slate-400">
+                  Overall Progress
+                </span>
+                <span className="font-extrabold text-indigo-600 dark:text-indigo-300">
+                  {project.completionPercentage}% Complete
+                </span>
+              </div>
+              <div className="mt-1.5 h-2 w-full overflow-hidden rounded-full bg-slate-200 dark:bg-white/10">
+                <div
+                  className="h-full rounded-full bg-gradient-to-r from-indigo-500 via-violet-500 to-emerald-500 transition-all duration-500"
+                  style={{ width: `${project.completionPercentage}%` }}
+                />
+              </div>
             </div>
+
+            {/* Quick Fill Sample Data Button */}
+            <button
+              type="button"
+              onClick={handleQuickFillSampleData}
+              disabled={saving || generatingStep !== null}
+              className="w-full btn-glass-secondary py-2 text-xs justify-center"
+              title="Populate sample data and run AI strategist for the current step"
+            >
+              <Wand2 className="h-3.5 w-3.5 text-indigo-500" />
+              <span>Quick Fill Sample Data</span>
+            </button>
           </div>
 
-          <nav className="space-y-1">
+          {/* 10-Step Navigation List with 4 Visual States */}
+          <nav className="space-y-1.5">
             {SIDEBAR_MODULES.map((mod) => {
-              const active = activeStep === mod.step;
-              const done = isStepCompleted(mod.step);
+              const isActive = activeStep === mod.step;
+              const state = getStepState(mod.step);
+
               return (
                 <button
                   key={mod.step}
                   type="button"
                   onClick={() => setActiveStep(mod.step)}
-                  className={`flex w-full items-center justify-between rounded-xl px-3 py-2.5 text-left text-xs font-medium transition ${
-                    active
-                      ? "bg-indigo-600 text-white shadow-sm"
-                      : "text-slate-300 hover:bg-white/5 hover:text-white"
+                  className={`flex w-full items-center justify-between rounded-xl px-3 py-2.5 text-left text-xs font-semibold transition-all ${
+                    isActive
+                      ? "bg-indigo-600/90 text-white shadow-[inset_0_1px_0_0_rgba(255,255,255,0.35),0_4px_14px_rgba(79,70,229,0.35)] ring-1 ring-indigo-400/50"
+                      : "text-slate-700 hover:bg-white/60 dark:text-slate-300 dark:hover:bg-white/[0.06]"
                   }`}
                 >
-                  <span className="truncate">{mod.label}</span>
-                  {done ? (
-                    <CheckCircle2
+                  <div className="flex items-center gap-2 truncate">
+                    {isActive && (
+                      <span className="h-2 w-2 shrink-0 rounded-full bg-white shadow-[0_0_8px_#fff]" />
+                    )}
+                    <span className="truncate">{mod.label}</span>
+                  </div>
+
+                  {/* 4 Visual State Indicators */}
+                  {state === "completed" ? (
+                    <span
+                      className={`inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 text-[10px] font-bold ${
+                        isActive
+                          ? "bg-white/20 text-white"
+                          : "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400"
+                      }`}
+                    >
+                      <CheckCircle2 className="h-3.5 w-3.5 shrink-0" />
+                    </span>
+                  ) : state === "draft" ? (
+                    <span
+                      title="In Progress / Draft"
+                      className="flex h-4 w-4 items-center justify-center"
+                    >
+                      <span
+                        className={`h-2.5 w-2.5 rounded-full ${
+                          isActive ? "bg-amber-300" : "bg-amber-400"
+                        }`}
+                      />
+                    </span>
+                  ) : (
+                    <Circle
                       className={`h-3.5 w-3.5 shrink-0 ${
-                        active ? "text-white" : "text-emerald-400"
+                        isActive ? "opacity-60" : "opacity-25"
                       }`}
                     />
-                  ) : (
-                    <Circle className="h-3.5 w-3.5 shrink-0 opacity-30" />
                   )}
                 </button>
               );
@@ -270,266 +448,303 @@ export default function ProjectWorkspacePage() {
           </nav>
         </div>
 
-        <div className="mt-6 border-t border-white/10 pt-4 space-y-2">
+        {/* Bottom PDF Shortcut inside Sidebar (with pb-10 clearance) */}
+        <div className="mt-6 border-t border-slate-200/70 dark:border-white/10 pt-4">
           <Link
             href={`/projects/${project.id}/brief`}
-            className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 px-3 py-2.5 text-xs font-semibold text-white shadow hover:opacity-95"
+            className="btn-apple-primary w-full text-xs"
           >
             <FileText className="h-3.5 w-3.5" />
-            <span>Open Final Brief & Export PDF</span>
+            <span>Full A4 Brief & Export PDF</span>
           </Link>
         </div>
       </aside>
 
-      {/* MAIN WORKSPACE CONTENT */}
-      <div className="flex-1 min-w-0 px-4 py-6 sm:px-8">
-        {/* Top Mobile Step Selector & Save Header */}
-        <div className="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-white/10 bg-[#11131c] p-4 no-print">
-          <div className="flex items-center gap-3">
-            <LayoutGrid className="h-5 w-5 text-indigo-400 lg:hidden" />
-            <select
-              value={activeStep}
-              onChange={(e) => setActiveStep(Number(e.target.value))}
-              className="rounded-lg border border-white/15 bg-[#090a0f] px-3 py-1.5 text-xs font-semibold text-white lg:hidden"
-            >
-              {SIDEBAR_MODULES.map((m) => (
-                <option key={m.step} value={m.step}>
-                  {m.label}
-                </option>
-              ))}
-            </select>
-            <div className="hidden lg:block">
-              <div className="text-xs font-semibold uppercase tracking-wider text-indigo-400">
-                {SIDEBAR_MODULES.find((m) => m.step === activeStep)?.label}
-              </div>
-              <div className="text-xs text-slate-400">
-                {project.step1_competition?.name || "Hackathon Project Strategy"}
-              </div>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={() =>
-                saveProjectUpdates(project, `Manual Save (Step ${activeStep})`)
-              }
-              disabled={saving}
-              className="inline-flex items-center gap-1.5 rounded-lg border border-white/15 bg-white/5 px-3.5 py-2 text-xs font-semibold text-slate-200 hover:bg-white/10"
-            >
-              <Save className="h-3.5 w-3.5 text-indigo-400" />
-              <span>{saving ? "Saving..." : "Save Progress"}</span>
-            </button>
-
-            <Link
-              href={`/projects/${project.id}/brief`}
-              className="inline-flex items-center gap-1.5 rounded-lg bg-indigo-600/20 border border-indigo-500/30 px-3.5 py-2 text-xs font-semibold text-indigo-300 hover:bg-indigo-600/30"
-            >
-              <FileText className="h-3.5 w-3.5" />
-              <span>Preview & Export PDF</span>
-            </Link>
-          </div>
+      {/* ==================================================================== */}
+      {/* COLUMN 2: CENTER MAIN WORKSPACE (flex-1 h-full flex flex-col)        */}
+      {/* ==================================================================== */}
+      <div className="flex-1 h-full flex flex-col overflow-hidden min-w-0">
+        {/* Mobile Step Dropdown (Only on <lg) */}
+        <div className="lg:hidden shrink-0 border-b border-slate-200/70 dark:border-white/10 px-4 py-2.5 glass-panel rounded-none flex items-center justify-between gap-2 no-print">
+          <select
+            value={activeStep}
+            onChange={(e) => setActiveStep(Number(e.target.value))}
+            className="flex-1 text-xs font-bold glass-input py-1.5 px-3"
+          >
+            {SIDEBAR_MODULES.map((m) => (
+              <option
+                key={m.step}
+                value={m.step}
+                className="bg-white text-slate-900 dark:bg-slate-900 dark:text-white"
+              >
+                {m.label}
+              </option>
+            ))}
+          </select>
+          <button
+            type="button"
+            onClick={handleQuickFillSampleData}
+            className="btn-glass-secondary px-2.5 py-1.5 text-[11px]"
+          >
+            <Wand2 className="h-3.5 w-3.5 text-indigo-500" />
+            <span>Sample</span>
+          </button>
         </div>
 
-        {/* MODULE 0: PROJECT OVERVIEW */}
-        {activeStep === 0 && (
-          <div className="space-y-6">
-            <div className="rounded-2xl border border-white/10 bg-[#11131c] p-6">
-              <h2 className="text-lg font-bold text-white">
-                Project Overview & Metadata
-              </h2>
-              <p className="mt-1 text-xs text-slate-400">
-                Configure your team metadata for the Final Project Brief cover
-                page and review overall completion status.
-              </p>
-
-              <div className="mt-5 grid gap-4 sm:grid-cols-2">
-                <div>
-                  <label className="block text-xs font-medium text-slate-300">
-                    Project Title
-                  </label>
-                  <input
-                    type="text"
-                    value={project.title}
-                    onChange={(e) =>
-                      setProject({ ...project, title: e.target.value })
-                    }
-                    className="mt-1 w-full rounded-lg border border-white/10 bg-[#090a0f] px-3.5 py-2 text-sm text-white"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-medium text-slate-300">
-                    Project Tagline
-                  </label>
-                  <input
-                    type="text"
-                    value={project.tagline}
-                    onChange={(e) =>
-                      setProject({ ...project, tagline: e.target.value })
-                    }
-                    className="mt-1 w-full rounded-lg border border-white/10 bg-[#090a0f] px-3.5 py-2 text-sm text-white"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-medium text-slate-300">
-                    Team Name
-                  </label>
-                  <input
-                    type="text"
-                    value={project.teamName}
-                    onChange={(e) =>
-                      setProject({ ...project, teamName: e.target.value })
-                    }
-                    className="mt-1 w-full rounded-lg border border-white/10 bg-[#090a0f] px-3.5 py-2 text-sm text-white"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-medium text-slate-300">
-                    Prepared By (Lead Author)
-                  </label>
-                  <input
-                    type="text"
-                    value={project.preparedBy}
-                    onChange={(e) =>
-                      setProject({ ...project, preparedBy: e.target.value })
-                    }
-                    className="mt-1 w-full rounded-lg border border-white/10 bg-[#090a0f] px-3.5 py-2 text-sm text-white"
-                  />
-                </div>
-              </div>
-
-              <div className="mt-5 flex justify-end">
-                <button
-                  type="button"
-                  onClick={() =>
-                    saveProjectUpdates(project, "Project Overview Updated")
-                  }
-                  className="rounded-xl bg-indigo-600 px-5 py-2.5 text-xs font-semibold text-white hover:bg-indigo-500"
-                >
-                  Save Overview
-                </button>
-              </div>
-            </div>
-
-            {/* 10-Step Status Grid */}
-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
-              {SIDEBAR_MODULES.slice(1).map((mod) => {
-                const done = isStepCompleted(mod.step);
-                return (
+        {/* SCROLLABLE CONTENT AREA */}
+        <div className="flex-1 overflow-y-auto p-6 lg:p-8 space-y-6">
+          {/* MODULE 0: PROJECT OVERVIEW */}
+          {activeStep === 0 && (
+            <div className="space-y-6">
+              <div className="glass-panel rounded-2xl p-6">
+                <div className="flex flex-wrap items-start justify-between gap-4 border-b border-slate-200/70 dark:border-white/10 pb-4">
+                  <div>
+                    <span className="rounded-lg bg-indigo-500/15 px-2.5 py-0.5 font-mono text-[11px] font-bold text-indigo-600 dark:text-indigo-300 border border-indigo-500/25">
+                      WORKSPACE OVERVIEW
+                    </span>
+                    <h2 className="mt-1.5 text-xl font-extrabold tracking-tight">
+                      Project Overview & Cover Page Metadata
+                    </h2>
+                    <p className="text-xs text-slate-600 dark:text-slate-400">
+                      Configure your team identity and inspect completion status
+                      across all 10 strategic modules.
+                    </p>
+                  </div>
                   <button
-                    key={mod.step}
                     type="button"
-                    onClick={() => setActiveStep(mod.step)}
-                    className="flex flex-col justify-between rounded-xl border border-white/10 bg-[#11131c] p-4 text-left hover:border-indigo-500/40"
+                    onClick={handleQuickFillSampleData}
+                    className="btn-glass-secondary"
                   >
-                    <div className="flex items-center justify-between">
-                      <span className="text-[11px] font-bold text-indigo-400">
-                        STEP {mod.step}
-                      </span>
-                      {done ? (
-                        <span className="rounded bg-emerald-500/15 px-1.5 py-0.5 text-[10px] font-semibold text-emerald-300">
-                          Complete
-                        </span>
-                      ) : (
-                        <span className="rounded bg-amber-500/15 px-1.5 py-0.5 text-[10px] font-semibold text-amber-300">
-                          Pending
-                        </span>
-                      )}
-                    </div>
-                    <div className="mt-2 text-xs font-semibold text-white">
-                      {mod.label.replace(/^\d+\.\s*/, "")}
-                    </div>
+                    <Wand2 className="h-3.5 w-3.5 text-indigo-500" />
+                    <span>Quick Fill Sample Data</span>
                   </button>
-                );
-              })}
+                </div>
+
+                <div className="mt-5 grid gap-4 sm:grid-cols-2">
+                  <div>
+                    <label className="block text-xs font-semibold">
+                      Project Working Title
+                    </label>
+                    <input
+                      type="text"
+                      value={project.title}
+                      onChange={(e) =>
+                        setProject({ ...project, title: e.target.value })
+                      }
+                      className="mt-1.5 w-full text-sm glass-input"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold">
+                      Project Tagline
+                    </label>
+                    <input
+                      type="text"
+                      value={project.tagline}
+                      onChange={(e) =>
+                        setProject({ ...project, tagline: e.target.value })
+                      }
+                      className="mt-1.5 w-full text-sm glass-input"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold">
+                      Team Name
+                    </label>
+                    <input
+                      type="text"
+                      value={project.teamName}
+                      onChange={(e) =>
+                        setProject({ ...project, teamName: e.target.value })
+                      }
+                      className="mt-1.5 w-full text-sm glass-input"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold">
+                      Prepared By (Lead Author)
+                    </label>
+                    <input
+                      type="text"
+                      value={project.preparedBy}
+                      onChange={(e) =>
+                        setProject({ ...project, preparedBy: e.target.value })
+                      }
+                      className="mt-1.5 w-full text-sm glass-input"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* 10-Step Status Overview Cards */}
+              <div className="grid gap-3.5 sm:grid-cols-2 xl:grid-cols-5">
+                {SIDEBAR_MODULES.slice(1).map((mod) => {
+                  const st = getStepState(mod.step);
+                  return (
+                    <button
+                      key={mod.step}
+                      type="button"
+                      onClick={() => setActiveStep(mod.step)}
+                      className="glass-card flex flex-col justify-between rounded-2xl p-4 text-left"
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="font-mono text-[10px] font-bold text-indigo-600 dark:text-indigo-400">
+                          STEP {mod.step}
+                        </span>
+                        {st === "completed" ? (
+                          <span className="rounded-full bg-emerald-500/15 px-2 py-0.5 text-[10px] font-bold text-emerald-600 dark:text-emerald-300">
+                            Completed
+                          </span>
+                        ) : st === "draft" ? (
+                          <span className="rounded-full bg-amber-500/15 px-2 py-0.5 text-[10px] font-bold text-amber-600 dark:text-amber-300">
+                            In Progress
+                          </span>
+                        ) : (
+                          <span className="rounded-full bg-slate-200/70 dark:bg-white/10 px-2 py-0.5 text-[10px] font-medium text-slate-500">
+                            Not Started
+                          </span>
+                        )}
+                      </div>
+                      <div className="mt-2.5 text-xs font-bold">
+                        {mod.label.replace(/^\d+\.\s*/, "")}
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
             </div>
-          </div>
-        )}
+          )}
 
-        {/* STEPS 1 TO 5: CORE WORKFLOW */}
-        {activeStep >= 1 && activeStep <= 5 && (
-          <CoreWorkflowSteps
-            project={project}
-            setProject={setProject}
-            activeStep={activeStep}
-            onSave={saveProjectUpdates}
-            onGenerate={handleGenerateModule}
-            generatingStep={generatingStep}
-          />
-        )}
+          {/* STEPS 1 TO 5: CORE WORKFLOW */}
+          {activeStep >= 1 && activeStep <= 5 && (
+            <CoreWorkflowSteps
+              project={project}
+              setProject={setProject}
+              activeStep={activeStep}
+              onSave={saveProjectUpdates}
+              onGenerate={handleGenerateModule}
+              generatingStep={generatingStep}
+            />
+          )}
 
-        {/* STEPS 6 TO 9: PRODUCT & TECHNICAL PLANNING */}
-        {activeStep >= 6 && activeStep <= 9 && (
-          <ProductPlanningSteps
-            project={project}
-            setProject={setProject}
-            activeStep={activeStep}
-            onSave={saveProjectUpdates}
-            onGenerate={handleGenerateModule}
-            generatingStep={generatingStep}
-          />
-        )}
+          {/* STEPS 6 TO 9: PRODUCT & TECHNICAL PLANNING */}
+          {activeStep >= 6 && activeStep <= 9 && (
+            <ProductPlanningSteps
+              project={project}
+              setProject={setProject}
+              activeStep={activeStep}
+              onSave={saveProjectUpdates}
+              onGenerate={handleGenerateModule}
+              generatingStep={generatingStep}
+            />
+          )}
 
-        {/* STEP 10: FINAL BRIEF WORKSPACE MODULE */}
-        {activeStep === 10 && (
-          <FinalBriefWorkspaceStep
-            project={project}
-            setProject={setProject}
-            onSave={saveProjectUpdates}
-            onGenerate={handleGenerateModule}
-            generatingStep={generatingStep}
-          />
-        )}
+          {/* STEP 10: FINAL BRIEF & SPLIT A4 PDF PREVIEW */}
+          {activeStep === 10 && (
+            <FinalBriefWorkspaceStep
+              project={project}
+              setProject={setProject}
+              onSave={saveProjectUpdates}
+              onGenerate={handleGenerateModule}
+              generatingStep={generatingStep}
+            />
+          )}
+        </div>
 
-        {/* Bottom Step Navigation Bar */}
-        <div className="mt-8 flex items-center justify-between rounded-xl border border-white/10 bg-[#11131c] p-4 no-print">
+        {/* ================================================================== */}
+        {/* STICKY BOTTOM ACTION BAR (h-16 shrink-0 glass-panel border-t)      */}
+        {/* ================================================================== */}
+        <div className="h-16 shrink-0 glass-panel border-t border-x-0 border-b-0 rounded-none px-4 sm:px-8 flex items-center justify-between z-10 no-print">
+          {/* Left: Previous Step */}
           <button
             type="button"
             disabled={activeStep <= 0}
             onClick={() => setActiveStep((s) => Math.max(0, s - 1))}
-            className="inline-flex items-center gap-2 rounded-lg border border-white/15 px-4 py-2 text-xs font-semibold text-slate-300 hover:bg-white/5 disabled:opacity-40"
+            className="btn-glass-secondary"
           >
             <ArrowLeft className="h-3.5 w-3.5" />
-            <span>Previous Step</span>
+            <span className="hidden sm:inline">Previous Step</span>
           </button>
 
-          <div className="flex items-center gap-2 text-xs text-slate-400">
-            <Sparkles className="h-3.5 w-3.5 text-indigo-400" />
-            <span>Step {activeStep} of 10</span>
-          </div>
-
-          {activeStep < 10 ? (
+          {/* Center: Save Draft + Step Indicator */}
+          <div className="flex items-center gap-3">
             <button
               type="button"
-              onClick={async () => {
-                await saveProjectUpdates(
-                  project,
-                  `Step ${activeStep} Auto-saved`,
-                  true
-                );
-                setActiveStep((s) => Math.min(10, s + 1));
-              }}
-              className="inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-5 py-2 text-xs font-semibold text-white hover:bg-indigo-500"
+              onClick={() =>
+                saveProjectUpdates(project, `Saved Draft (Step ${activeStep})`)
+              }
+              disabled={saving}
+              className="btn-glass-secondary"
             >
-              <span>Next Step</span>
-              <ArrowRight className="h-3.5 w-3.5" />
+              <Save className="h-3.5 w-3.5 text-indigo-500" />
+              <span>{saving ? "Saving..." : "Save Draft"}</span>
             </button>
-          ) : (
-            <Link
-              href={`/projects/${project.id}/brief`}
-              className="inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-5 py-2 text-xs font-semibold text-white hover:bg-emerald-500"
-            >
-              <FileText className="h-3.5 w-3.5" />
-              <span>Full-Screen Brief & Export PDF</span>
-            </Link>
-          )}
+
+            <span className="hidden md:inline-flex items-center gap-1.5 rounded-xl bg-slate-200/70 dark:bg-white/[0.06] px-3 py-1.5 font-mono text-xs font-bold">
+              <Info className="h-3.5 w-3.5 text-indigo-500" />
+              <span>Step {activeStep} of 10</span>
+            </span>
+          </div>
+
+          {/* Right: Generate with AI + Next Step */}
+          <div className="flex items-center gap-2.5">
+            {activeStep >= 1 && activeStep <= 10 && (
+              <button
+                type="button"
+                onClick={() => handleGenerateModule(activeStep)}
+                disabled={generatingStep === activeStep}
+                className="btn-apple-primary text-xs py-2 px-4"
+              >
+                <Sparkles className="h-3.5 w-3.5" />
+                <span>
+                  {generatingStep === activeStep
+                    ? "Generating..."
+                    : "Generate with AI"}
+                </span>
+              </button>
+            )}
+
+            {activeStep < 10 ? (
+              <button
+                type="button"
+                onClick={async () => {
+                  await saveProjectUpdates(
+                    project,
+                    `Step ${activeStep} Auto-saved`,
+                    true
+                  );
+                  setActiveStep((s) => Math.min(10, s + 1));
+                }}
+                className="btn-glass-secondary font-bold"
+              >
+                <span>Next Step</span>
+                <ArrowRight className="h-3.5 w-3.5" />
+              </button>
+            ) : (
+              <Link
+                href={`/projects/${project.id}/brief`}
+                className="btn-glass-secondary font-bold text-emerald-600 dark:text-emerald-400"
+              >
+                <FileText className="h-3.5 w-3.5" />
+                <span>Full PDF View</span>
+              </Link>
+            )}
+          </div>
         </div>
       </div>
 
-      {/* RIGHT STICKY PANEL: JUDGE SCORE ENGINE */}
+      {/* ==================================================================== */}
+      {/* COLUMN 3: RIGHT STICKY PANEL — JUDGE SCORE ENGINE                    */}
+      {/* ==================================================================== */}
       <JudgeScorePanel
         project={project}
+        activeStep={activeStep}
         onJumpToStep={(step) => setActiveStep(step)}
+        onRecalculate={async () => {
+          await saveProjectUpdates(project, "Manual Score Recalculation");
+        }}
+        mobileOpen={mobileJudgeOpen}
+        setMobileOpen={setMobileJudgeOpen}
       />
     </div>
   );

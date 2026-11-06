@@ -273,3 +273,4 @@ model AIGenerationHistory {
 
   @@index([projectId])
 }
+

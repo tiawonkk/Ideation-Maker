@@ -203,3 +203,4 @@ describe("Hackathon Brief Generator AI — Core Engine & Acceptance Tests", () =
     expect(calculateCompletionPercentage(proj)).toBe(100);
   });
 });
+
