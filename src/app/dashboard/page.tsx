@@ -18,57 +18,6 @@ import {
   Layers,
 } from "lucide-react";
 
-const COMPETITION_PRESETS = [
-  {
-    name: "Gemini API Developer Competition",
-    theme: "Multimodal AI for High-Impact Real-World Workflows",
-    domain: "Healthcare, Education & Accessibility",
-    targetTech: "Google Gemini Multimodal API, Next.js, TypeScript, PostgreSQL",
-    description:
-      "Build innovative applications leveraging Gemini multimodal reasoning (audio, image, video, text) to solve meaningful human challenges.",
-  },
-  {
-    name: "Microsoft AI Challenge",
-    theme: "Enterprise & Public Sector Copilot Innovation",
-    domain: "Enterprise Productivity & Cloud AI",
-    targetTech: "Azure OpenAI, Next.js, PostgreSQL, Azure App Service",
-    description:
-      "Design an AI solution that transforms complex organizational workflows with measurable ROI and responsible AI guardrails.",
-  },
-  {
-    name: "GEMASTIK (Divisi Piranti Cerdas / Kota Cerdas)",
-    theme: "Inovasi Digital untuk Ketahanan Nasional & Pelayanan Publik",
-    domain: "Smart City, Public Service & GovTech Indonesia",
-    targetTech: "Next.js, IoT/AI Pipeline, PostgreSQL, Cloud Analytics",
-    description:
-      "Kembangkan solusi teknologi informasi tervalidasi untuk meningkatkan efisiensi layanan publik dan kesejahteraan masyarakat di Indonesia.",
-  },
-  {
-    name: "PKM-KC (Program Kreativitas Mahasiswa - Karsa Cipta)",
-    theme: "Purwarupa Sistem Cerdas Berbasis Riset Ilmiah",
-    domain: "Applied Research & Student Innovation",
-    targetTech: "AI Vision / NLP, Web Dashboard, Embedded / Cloud API",
-    description:
-      "Rancang sistem konstruktif berbasis bukti ilmiah (jurnal & data resmi) yang siap diwujudkan menjadi prototipe fungsional.",
-  },
-  {
-    name: "AWS Generative AI Hackathon",
-    theme: "Scalable Cloud-Native Agentic Workflows",
-    domain: "FinTech, Supply Chain & Developer Tools",
-    targetTech: "Amazon Bedrock, Next.js, Serverless API, PostgreSQL",
-    description:
-      "Build production-grade cloud AI applications using agentic orchestration and verifiable data retrieval.",
-  },
-  {
-    name: "Startup Weekend",
-    theme: "54-Hour Validated MVP & Business Model Sprint",
-    domain: "B2B SaaS & Consumer Tech",
-    targetTech: "Next.js Full-Stack, Stripe/Payments, AI API, PostgreSQL",
-    description:
-      "Validate a painful customer problem, build a working MVP prototype, and demonstrate clear market viability in one weekend.",
-  },
-];
-
 export default function DashboardPage() {
   const { t, user, showToast } = useApp();
   const router = useRouter();
@@ -99,27 +48,16 @@ export default function DashboardPage() {
     fetchProjects();
   }, [fetchProjects, user?.id]);
 
-  const handleCreateProject = async (
-    preset?: (typeof COMPETITION_PRESETS)[0]
-  ) => {
+  const handleCreateProject = async () => {
     setCreating(true);
     try {
-      const payload = preset
-        ? {
-            title: `${preset.name} Strategy Brief`,
-            competitionName: preset.name,
-            theme: preset.theme,
-            domain: preset.domain,
-            targetTech: preset.targetTech,
-            description: preset.description,
-          }
-        : {
-            title: newTitle.trim() || "New Hackathon Project Brief",
-            competitionName: newCompName.trim(),
-            theme: newTheme.trim(),
-            domain: newDomain.trim(),
-            targetTech: newTech.trim(),
-          };
+      const payload = {
+        title: newTitle.trim() || "New Hackathon Project Brief",
+        competitionName: newCompName.trim(),
+        theme: newTheme.trim(),
+        domain: newDomain.trim(),
+        targetTech: newTech.trim(),
+      };
 
       const res = await fetch("/api/projects", {
         method: "POST",
@@ -201,43 +139,8 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* QUICK START PRESETS */}
-      <div className="mt-8">
-        <h2 className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-          {t.dashboard.quickTemplates}
-        </h2>
-        <div className="mt-3 grid gap-3.5 sm:grid-cols-2 lg:grid-cols-3">
-          {COMPETITION_PRESETS.map((preset) => (
-            <button
-              key={preset.name}
-              onClick={() => handleCreateProject(preset)}
-              disabled={creating}
-              className="group glass-card flex flex-col justify-between rounded-2xl p-4 text-left hover:scale-[1.01]"
-            >
-              <div>
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold text-indigo-600 dark:text-indigo-400">
-                    {preset.name}
-                  </span>
-                  <Plus className="h-3.5 w-3.5 text-slate-400 group-hover:text-indigo-500" />
-                </div>
-                <div className="mt-1 text-xs font-bold line-clamp-1">
-                  {preset.theme}
-                </div>
-                <p className="mt-1 text-[11px] text-slate-600 dark:text-slate-400 line-clamp-2">
-                  {preset.description}
-                </p>
-              </div>
-              <div className="mt-3 pt-2 border-t border-slate-200/70 dark:border-white/10 text-[10px] text-slate-500">
-                Stack: {preset.targetTech}
-              </div>
-            </button>
-          ))}
-        </div>
-      </div>
-
       {/* RECENT PROJECTS GRID */}
-      <div className="mt-12">
+      <div className="mt-8">
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-extrabold">
             {t.dashboard.recentProjects} ({projects.length})
@@ -260,8 +163,7 @@ export default function DashboardPage() {
               {t.dashboard.noProjects}
             </h3>
             <p className="mt-1 text-xs text-slate-500">
-              Click &ldquo;Create New Project&rdquo; or select a competition
-              preset above to launch the 10-step AI workspace.
+              Click &ldquo;Create New Project&rdquo; to launch your 10-step AI strategy workspace.
             </p>
             <button
               onClick={() => setShowCreateModal(true)}

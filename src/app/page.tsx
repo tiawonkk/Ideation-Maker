@@ -363,18 +363,11 @@ export default function LandingPage() {
                   </div>
                 </div>
                 <Link
-                  href="/projects/proj-sample-medtriage"
+                  href="/dashboard"
                   className="btn-apple-primary text-xs"
                 >
-                  <span>Inspect Live 3-Column Workspace</span>
+                  <span>Open Planning Workspace</span>
                   <ArrowRight className="h-3.5 w-3.5" />
-                </Link>
-                <Link
-                  href="/projects/proj-sample-medtriage/brief"
-                  className="btn-glass-secondary"
-                >
-                  <FileText className="h-3.5 w-3.5" />
-                  <span>Preview Sample A4 PDF Brief</span>
                 </Link>
               </div>
             </div>
@@ -459,18 +452,6 @@ export default function LandingPage() {
           <div className="flex items-center gap-6 font-medium">
             <Link href="/dashboard" className="hover:text-indigo-500">
               Dashboard
-            </Link>
-            <Link
-              href="/projects/proj-sample-medtriage"
-              className="hover:text-indigo-500"
-            >
-              Sample Workspace
-            </Link>
-            <Link
-              href="/projects/proj-sample-medtriage/brief"
-              className="hover:text-indigo-500"
-            >
-              Sample PDF Brief
             </Link>
             <Link href="/auth" className="hover:text-indigo-500">
               Account & Authorization

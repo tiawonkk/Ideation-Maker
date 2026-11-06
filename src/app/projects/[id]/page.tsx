@@ -18,7 +18,6 @@ import {
   ArrowRight,
   ShieldAlert,
   Sparkles,
-  Wand2,
   Info,
 } from "lucide-react";
 
@@ -187,71 +186,6 @@ export default function ProjectWorkspacePage() {
     }
   };
 
-  // Quick Fill Sample Data for fast testing
-  const handleQuickFillSampleData = async () => {
-    if (!project) return;
-    setSaving(true);
-    try {
-      const sampleFilled: Partial<Project> = {
-        title:
-          project.title.includes("Untitled") || project.title.includes("New")
-            ? "MedTriage Rural AI — Multimodal Triage Copilot"
-            : project.title,
-        tagline:
-          "60-Second Multimodal Clinical Triage & SBAR Referral Copilot for Rural Primary Care.",
-        step1_competition: {
-          ...project.step1_competition,
-          name:
-            project.step1_competition.name ||
-            "Gemini API Developer Competition",
-          theme:
-            project.step1_competition.theme ||
-            "AI for Social Impact & Accessible Healthcare",
-          domain:
-            project.step1_competition.domain ||
-            "Healthcare & Clinical Triage Informatics",
-          targetTechnology:
-            project.step1_competition.targetTechnology ||
-            "Google Gemini 2.5 Multimodal API, Next.js 15, TypeScript, PostgreSQL",
-          description:
-            "Build high-impact applications using multimodal generative AI to solve urgent community challenges in healthcare.",
-          additionalContext:
-            "Focus on underserved rural primary care clinics (Puskesmas) with limited specialist physicians.",
-        },
-        step3_problemDiscovery: {
-          ...project.step3_problemDiscovery,
-          whoExperiences:
-            "Frontline triage nurses at rural primary healthcare clinics (Puskesmas) in underserved regions.",
-          biggestDifficulty:
-            "Rapidly cross-referencing complex symptoms, vital signs, and 200-page clinical SOP guidelines during peak clinic hours while manually writing hospital referral summaries.",
-          frequency: "Daily — 30 to 60 patient intakes per clinic every morning.",
-          impact:
-            "15–25 minutes wasted per complex referral on manual documentation and delayed escalation of high-risk emergencies.",
-          currentWorkarounds:
-            "Static PDF guideline booklets, unstructured WhatsApp messages, and handwritten paper referral forms.",
-          whyInsufficient:
-            "Static PDFs cannot actively flag risk combinations from patient vitals, and unstructured chats omit critical clinical red flags.",
-        },
-      };
-
-      const saved = await saveProjectUpdates(
-        sampleFilled,
-        "Quick-Filled Sample Inputs",
-        true
-      );
-      if (saved) {
-        // Trigger AI generation for the current step if applicable
-        if (activeStep >= 1 && activeStep <= 10) {
-          await handleGenerateModule(activeStep);
-        } else {
-          showToast("Sample data populated across workspace!", "success");
-        }
-      }
-    } finally {
-      setSaving(false);
-    }
-  };
-
   if (loading) {
     return (
       <div className="mx-auto max-w-6xl p-8">
@@ -389,18 +323,6 @@ export default function ProjectWorkspacePage() {
                 />
               </div>
             </div>
-
-            {/* Quick Fill Sample Data Button */}
-            <button
-              type="button"
-              onClick={handleQuickFillSampleData}
-              disabled={saving || generatingStep !== null}
-              className="w-full btn-glass-secondary py-2 text-xs justify-center"
-              title="Populate sample data and run AI strategist for the current step"
-            >
-              <Wand2 className="h-3.5 w-3.5 text-indigo-500" />
-              <span>Quick Fill Sample Data</span>
-            </button>
           </div>
 
           {/* 10-Step Navigation List with 4 Visual States */}
@@ -495,14 +417,6 @@ export default function ProjectWorkspacePage() {
               </option>
             ))}
           </select>
-          <button
-            type="button"
-            onClick={handleQuickFillSampleData}
-            className="btn-glass-secondary px-2.5 py-1.5 text-[11px]"
-          >
-            <Wand2 className="h-3.5 w-3.5 text-indigo-500" />
-            <span>Sample</span>
-          </button>
         </div>
 
         {/* SCROLLABLE CONTENT AREA */}
@@ -524,14 +438,6 @@ export default function ProjectWorkspacePage() {
                       across all 10 strategic modules.
                     </p>
                   </div>
-                  <button
-                    type="button"
-                    onClick={handleQuickFillSampleData}
-                    className="btn-glass-secondary"
-                  >
-                    <Wand2 className="h-3.5 w-3.5 text-indigo-500" />
-                    <span>Quick Fill Sample Data</span>
-                  </button>
                 </div>
 
                 <div className="mt-5 grid gap-4 sm:grid-cols-2">
